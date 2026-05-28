@@ -2,10 +2,14 @@
 
 ## Links
 
-- **Repo:** https://github.com/mzdifraia/glassbox-ssp
-- **Live demo:** https://glassbox-ssp.vercel.app
-- **Walkthrough layout:** https://glassbox-ssp.vercel.app?walkthrough=1
-- **Health:** https://glassbox-ssp.vercel.app/api/health
+Full docs: [README.md](README.md)
+
+| | URL |
+|---|-----|
+| Repo | https://github.com/mzdifraia/glassbox-ssp |
+| Live demo | https://glassbox-ssp.vercel.app |
+| Walkthrough | https://glassbox-ssp.vercel.app?walkthrough=1 |
+| Health | https://glassbox-ssp.vercel.app/api/health |
 
 ## One-liner
 

@@ -1,143 +1,222 @@
+<div align="center">
+
 # GlassBox SSP
 
-[![GitHub](https://img.shields.io/badge/GitHub-mzdifraia%2Fglassbox--ssp-181717?style=flat&logo=github)](https://github.com/mzdifraia/glassbox-ssp)
+**Publisher policy + measurement for in-chat ads**
 
-GlassBox is a publisher-side trust and measurement layer for AI-native ads.
+Hard gates before scoring. Streaming pipeline. Receipts and traces you can export.
 
-It helps AI apps:
+<br />
 
-- decide whether a prompt is monetisable
-- suppress ads in vulnerable contexts
-- block unsafe or unsupported ad candidates
-- serve transparent sponsored responses
-- explain why an ad appeared
-- attribute clicks and conversions back to chat sessions
-- trace every decision step for auditability
+[![Live demo](https://img.shields.io/badge/demo-live-22d3ee?style=for-the-badge)](https://glassbox-ssp.vercel.app)
+[![Walkthrough](https://img.shields.io/badge/layout-walkthrough-0891b2?style=for-the-badge)](https://glassbox-ssp.vercel.app?walkthrough=1)
+[![Health](https://img.shields.io/badge/API-health-10b981?style=for-the-badge)](https://glassbox-ssp.vercel.app/api/health)
+[![GitHub](https://img.shields.io/badge/code-GitHub-181717?style=for-the-badge&logo=github)](https://github.com/mzdifraia/glassbox-ssp)
 
-## Track
+<br />
 
-Sell-Side & Measurement
+| | |
+|:---:|:---:|
+| **Production** | [glassbox-ssp.vercel.app](https://glassbox-ssp.vercel.app) |
+| **Walkthrough UI** | [glassbox-ssp.vercel.app?walkthrough=1](https://glassbox-ssp.vercel.app?walkthrough=1) |
+| **Integrations probe** | [glassbox-ssp.vercel.app/api/health](https://glassbox-ssp.vercel.app/api/health) |
 
-## Sponsor tools (hackathon)
+</div>
 
-- **Cursor** — built with Cursor; receipt/policy agent workflow
-- **Tavily** — claim grounding for candidate ads
-- **Overmind** — trace/evaluation-ready decision log
+---
 
-**Thrad is for after the hack.** Build and demo the publisher trust layer on **stub supply** now; plug in the `ThradProvider` adapter at go-to-market (`ENABLE_THRAD_GTM=1` + `THRAD_API_KEY`). The `AdProvider` boundary is already there so you do not rework policy, receipts, or attribution.
+## What it does
 
-## Key principle
+GlassBox sits on the **publisher** side of AI-native chat. For each user prompt it runs a fixed pipeline: safety → intent → supply → claim checks → auction → sponsored slot or suppression → **transparency receipt** → attribution → trace.
 
-Safety is a hard gate before scoring. A high bid can never override policy.
-
-## Quick start
-
-```bash
-npm install
-cp env.example .env.local   # add TAVILY_API_KEY=tvly-... on the same line as the variable name
-npm test                    # policy + seeded auction tests
-npm run dev
+```text
+Policy is code, not a score penalty. A higher bid cannot override a block.
 ```
 
-Health check: `GET /api/health` after deploy.
+| Capability | Detail |
+|------------|--------|
+| Prompt gates | Vulnerability / distress suppresses before any ad request |
+| Candidate gates | Unsupported claims, category mismatch, manipulative copy |
+| Auction | Stub supply in demo; live bid/relevance jitter unless `?frozen=1` |
+| Receipt | Why served, why blocked, data used / stored / not stored |
+| Trace | Overmind-ready JSON export per run |
 
-**Live:** [https://glassbox-ssp.vercel.app](https://glassbox-ssp.vercel.app) · **Walkthrough:** [?walkthrough=1](https://glassbox-ssp.vercel.app?walkthrough=1)
+**Track:** Sell-Side & Measurement (Cursor AdTech London hackathon)
 
-Local: [http://localhost:3000](http://localhost:3000) (`npm run dev`).
+---
 
-**Walkthrough layout** (`?walkthrough=1`): wider panels, run-both button. Add `?debug=1` for edge-case toggles.
+## Try the live app
 
-## Testing & auction variance
+Open the site — no install required.
 
-Policy gates (vulnerability, unsupported claims, category blocks) are **rule-based and stable**. Supply auction noise is **non-deterministic by default** so the demo feels live.
+### Recommended first visit
 
-| Mode | How | Use when |
-|------|-----|----------|
-| **Live** | No `seed` in request | Winner/bids can change each run |
-| **Seeded** | `seed: "golden-safe"` in API body or `?seed=golden-safe` | Reproducible tests & bug reports |
-| **Frozen** | `frozen: true` or `?frozen=1` | Rehearsal with pinned bids (Ledgerly baseline) |
+1. Go to **[walkthrough layout](https://glassbox-ssp.vercel.app?walkthrough=1)** (wider panels + “run both scenarios”).
+2. Watch the **run status** bar: scenario **A** or **B**, phase (`RUNNING` → `TYPING` → `DONE`), active pipeline step.
+3. Click **Run both scenarios (commercial → distress)** or run **A** then **B** separately.
 
-```bash
-npm test          # Vitest — same seed ⇒ same winner; policy cases pinned
-npm run test:watch
-```
+### Scenarios on the site
 
-Example API call for a stable integration test:
+| Button | What runs | What to notice |
+|--------|-----------|----------------|
+| **A · Commercial** | Full pipeline + stub auction | HyperBooks blocked on claims despite higher bid |
+| **B · Distress** | Stops at prompt safety | `PROMPT_VULNERABILITY_SUPPRESS` — no ad request |
+| **Reset** | Clears UI state | Snapshots, trace, panels |
 
-```bash
-curl -s -X POST http://localhost:3000/api/run \
-  -H 'Content-Type: application/json' \
-  -d '{"prompt":"I'\''m choosing accounting software for my 12-person startup.","seed":"golden-safe"}' \
-  | jq '.sponsored.advertiser'
-```
+### URL parameters
 
-## Overmind (open source)
+Append to [glassbox-ssp.vercel.app](https://glassbox-ssp.vercel.app):
 
-GlassBox exports traces compatible with [Overmind OSS](https://github.com/overmind-core/overmind) eval workflows:
+| Param | Effect |
+|-------|--------|
+| [`?walkthrough=1`](https://glassbox-ssp.vercel.app?walkthrough=1) | Walkthrough layout + run-both button |
+| [`?fast=1`](https://glassbox-ssp.vercel.app?fast=1) | Skip client pacing between stream events |
+| [`?debug=1`](https://glassbox-ssp.vercel.app?debug=1) | Edge toggles (NO_SAFE_ADS, API failure, test seed) |
+| [`?seed=golden-safe`](https://glassbox-ssp.vercel.app?seed=golden-safe) | Reproducible auction (same winner each run) |
+| [`?frozen=1`](https://glassbox-ssp.vercel.app?frozen=1) | Pin supply metrics (no bid jitter) |
 
-- [`overmind/policies.md`](overmind/policies.md) — publisher safety policy IDs
-- [`overmind/dataset.json`](overmind/dataset.json) — golden demo cases
-- **Export trace JSON** button in the UI after each run
+The in-app **System** panel lists pipeline step IDs, HTTP routes, and integration modes (matches production — check [health JSON](https://glassbox-ssp.vercel.app/api/health)).
 
-No hosted Overmind API required — clone `overmind-core/overmind` and point eval at exported traces.
-
-## Environment variables
-
-| Variable | Description |
-|----------|-------------|
-| `TAVILY_API_KEY` | Enables Tavily claim grounding (falls back to stub if unset) |
-| `THRAD_API_KEY` | **Post-hack GTM only** — live Thrad supply (ignored unless `ENABLE_THRAD_GTM=1`) |
-| `ENABLE_THRAD_GTM` | Set to `1` to use Thrad instead of stub (not needed for hackathon demo) |
-| `THRAD_API_URL` | Optional Thrad endpoint override (GTM) |
-| `SIMULATE_THRAD_FAILURE` | Set to `1` to force ad-provider failure path (stub or Thrad) |
-| `OVERMIND_TRACE_ID` | If set, displayed in trace panel (not faked) |
-| `CURSOR_API_KEY` | Optional — for future receipt agent scripts |
-
-Copy `.env.local.example` to `.env.local` and fill in keys as needed.
-
-> Demo runs on **stub candidates** by design. Thrad ships when you go to market — the adapter is isolated behind `AdProvider` so policy, receipts, and attribution stay unchanged.
-
-## Demo script
-
-1. Show **System** panel (pipeline step IDs, APIs, Tavily mode).
-2. Run **Commercial (A)** — walk through gates; point at HyperBooks block in auction.
-3. Run **Distress (B)** — show `PROMPT_VULNERABILITY_SUPPRESS` and no ad request in receipt.
-4. Export trace JSON for Overmind eval.
-
-## Demo paths
-
-| Path | How to trigger |
-|------|----------------|
-| SAFE_COMMERCIAL | “Run safe commercial prompt” button |
-| SENSITIVE_CONTEXT | “Run vulnerable prompt” button |
-| UNSAFE_CANDIDATE | Automatic on safe path (HyperBooks) |
-| NO_SAFE_ADS | Check “Force NO_SAFE_ADS” |
-| API_FAILURE | Check “Simulate API failure” |
-
-## Submission
-
-**Project name:** GlassBox SSP
-
-**One-line description:** GlassBox helps AI apps decide when a prompt is monetisable, safely serve or suppress sponsored responses, explain every placement, and attribute ROI back to the chat.
-
-**Track:** Sell-Side & Measurement
-
-**Technologies used:** Next.js, TypeScript, Tailwind, Cursor, Tavily, Overmind-ready traces; stub supply for hack (Thrad adapter ready for GTM)
-
-**Notes:** Publisher-side trust and measurement layer around conversational ads. Hackathon demo uses stub ad supply; Thrad integration is post-hack go-to-market behind `AdProvider`.
+---
 
 ## Architecture
 
+```mermaid
+flowchart LR
+  subgraph input
+    P[User prompt]
+  end
+  subgraph gates
+    PS[prompt-safety]
+    IC[intent]
+  end
+  subgraph supply
+    AD[StubAdProvider]
+    CG[claim-grounding]
+    CS[candidate-safety]
+    SC[scoring]
+  end
+  subgraph output
+    SP[sponsored]
+    RC[receipt]
+    AT[attribution]
+    TR[trace]
+  end
+  P --> PS --> IC --> AD --> CG --> CS --> SC --> SP --> RC --> AT --> TR
 ```
-User prompt
-→ prompt safety gate
-→ intent classifier
-→ ad candidate provider (stub at hack; Thrad adapter at GTM)
-→ candidate safety gate
-→ Tavily claim grounding
-→ score surviving candidates
-→ render sponsored response
-→ generate transparency receipt
-→ log attribution event
-→ show trace / Overmind-style evaluation
+
+**10 pipeline gates** (IDs match the UI and `overmind/policies.md`):
+
+`prompt-safety` → `intent` → `candidates` → `claim-grounding` → `candidate-safety` → `scoring` → `sponsored` → `receipt` → `attribution` → `trace`
+
+### HTTP API
+
+| Method | Path | Notes |
+|--------|------|--------|
+| `POST` | `/api/run/stream` | **NDJSON** — `status`, `step`, `candidates`, `complete` ([use from UI](https://glassbox-ssp.vercel.app)) |
+| `POST` | `/api/run` | Single JSON `PipelineResult` |
+| `GET` | `/api/health` | [Live probe](https://glassbox-ssp.vercel.app/api/health) |
+| `GET` | `/api/integrations` | Tavily / supply / Thrad mode |
+
+Example against production:
+
+```bash
+curl -s -X POST https://glassbox-ssp.vercel.app/api/run \
+  -H 'Content-Type: application/json' \
+  -d '{"prompt":"I'\''m choosing accounting software for my 12-person startup.","seed":"golden-safe"}' \
+  | jq '{advertiser: .sponsored.advertiser, supply: .integrations.supply, decision: .receipt.placementDecision}'
 ```
+
+Streaming:
+
+```bash
+curl -s -N -X POST https://glassbox-ssp.vercel.app/api/run/stream \
+  -H 'Content-Type: application/json' \
+  -d '{"prompt":"I'\''m overwhelmed and worried I can'\''t pay my debts."}'
+```
+
+---
+
+## Run locally
+
+```bash
+git clone https://github.com/mzdifraia/glassbox-ssp.git
+cd glassbox-ssp
+npm install
+cp env.example .env.local   # TAVILY_API_KEY=tvly-... on the same line
+npm test
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) — same UI as [production](https://glassbox-ssp.vercel.app), minus your local env keys.
+
+### Environment
+
+| Variable | Demo | Production |
+|----------|------|------------|
+| `TAVILY_API_KEY` | Optional — hybrid claim grounding | Set on Vercel for [live Tavily](https://glassbox-ssp.vercel.app/api/health) |
+| `THRAD_API_KEY` | Not used in hackathon demo | Post-GTM only with `ENABLE_THRAD_GTM=1` |
+| `ENABLE_THRAD_GTM` | Leave unset | `1` + Thrad key to swap stub supply |
+| `SIMULATE_THRAD_FAILURE` | `?debug=1` UI toggle | Forces ad-provider failure path |
+
+Thrad adapter lives in `src/lib/ads/ThradProvider.ts` behind `AdProvider` — policy, receipts, and attribution stay the same when you flip supply at launch.
+
+---
+
+## Testing & auction modes
+
+Policy outcomes are **stable** (distress always suppressed, HyperBooks blocked on unsupported claims). Auction noise is **live by default** on the [website](https://glassbox-ssp.vercel.app).
+
+| Mode | Trigger | Behaviour |
+|------|---------|-----------|
+| Live | default | Random bid/relevance jitter |
+| Seeded | `seed` in API or `?seed=` | Same PRNG → same winner |
+| Frozen | `frozen: true` or `?frozen=1` | No jitter |
+
+```bash
+npm test
+npm run test:watch
+```
+
+---
+
+## Integrations
+
+| Tool | Role in this repo |
+|------|-------------------|
+| [**Cursor**](https://cursor.com) | Built with Cursor |
+| [**Tavily**](https://tavily.com) | Claim grounding when `TAVILY_API_KEY` is set |
+| [**Overmind OSS**](https://github.com/overmind-core/overmind) | [`overmind/policies.md`](overmind/policies.md), [`overmind/dataset.json`](overmind/dataset.json), trace export in UI |
+| **Thrad** | `ThradProvider` for GTM — stub supply in [live demo](https://glassbox-ssp.vercel.app) |
+
+Export a trace after any run on the site → **Export trace JSON** (compatible with Overmind eval fixtures).
+
+---
+
+## Repo map
+
+```text
+src/lib/pipeline/runPipeline.ts   orchestrator
+src/lib/safety/                   prompt + candidate gates
+src/lib/claims/                   hard-block + Tavily
+src/lib/scoring/                  composite auction score
+src/lib/ads/                      StubAdProvider · ThradProvider
+src/app/api/run/stream/           streaming endpoint
+overmind/                         policies + golden dataset
+```
+
+---
+
+## Hackathon submission
+
+See [`SUBMISSION.md`](SUBMISSION.md) for links and a short walkthrough aligned with the [live walkthrough UI](https://glassbox-ssp.vercel.app?walkthrough=1).
+
+**One line:** GlassBox decides when a chat may show ads, which candidate wins under policy, why, and how to audit it.
+
+---
+
+<div align="center">
+
+**[Open live demo →](https://glassbox-ssp.vercel.app)** · **[Walkthrough →](https://glassbox-ssp.vercel.app?walkthrough=1)** · **[Health check →](https://glassbox-ssp.vercel.app/api/health)**
+
+</div>

@@ -8,8 +8,8 @@ import { CompareSummary } from "@/components/CompareSummary";
 import { RunContextBar } from "@/components/RunContextBar";
 import { DemoBar } from "@/components/DemoBar";
 import { IntegrationBadges } from "@/components/IntegrationBadges";
-import { TechnicalOverview } from "@/components/TechnicalOverview";
 import { PipelinePanel } from "@/components/PipelinePanel";
+import { DemoDisclaimer } from "@/components/DemoDisclaimer";
 import { DemoRunStatus } from "@/components/DemoRunStatus";
 import { PolicyBeat } from "@/components/PolicyBeat";
 import { PolicyMoment } from "@/components/PolicyMoment";
@@ -45,7 +45,6 @@ function panelSubtitle(
 function HomeContent() {
   const searchParams = useSearchParams();
   const debug = searchParams.get("debug") === "1";
-  const showSystem = searchParams.get("system") === "1" || debug;
   const walkthrough =
     searchParams.get("walkthrough") === "1" ||
     searchParams.get("presenter") === "1";
@@ -138,12 +137,6 @@ function HomeContent() {
         )}
 
         <PolicyBeat compact={walkthrough} />
-
-        <TechnicalOverview
-          status={demo.result?.integrations ?? demo.integrationStatus}
-          lastRunMs={demo.result?.durationMs}
-          defaultOpen={showSystem}
-        />
 
         <DemoBar
           loading={demo.loading}
@@ -268,6 +261,10 @@ function HomeContent() {
             <TracePanel result={demo.result} />
           </div>
         )}
+
+        <DemoDisclaimer
+          status={demo.result?.integrations ?? demo.integrationStatus}
+        />
       </main>
     </div>
   );

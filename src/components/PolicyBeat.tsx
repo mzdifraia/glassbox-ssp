@@ -22,8 +22,25 @@ export function PolicyBeat({ compact }: PolicyBeatProps) {
         {!compact && (
           <p className="mt-2 max-w-2xl text-sm text-zinc-500">
             Run a scenario below — the status bar and pipeline panel show each
-            gate live. API and step IDs are in the README or{" "}
-            <span className="text-zinc-400">System reference</span> (collapsed).
+            gate live. Step IDs, API routes, and integrations are in the{" "}
+            <a
+              href="https://github.com/mzdifraia/glassbox-ssp#architecture"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-cyan-600/90 hover:text-cyan-400"
+            >
+              README
+            </a>{" "}
+            or{" "}
+            <a
+              href="https://glassbox-ssp.vercel.app/api/health"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-emerald-600/90 hover:text-emerald-400"
+            >
+              health JSON
+            </a>
+            .
           </p>
         )}
       </div>

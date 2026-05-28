@@ -75,9 +75,8 @@ Append to [glassbox-ssp.vercel.app](https://glassbox-ssp.vercel.app):
 | [`?debug=1`](https://glassbox-ssp.vercel.app?debug=1) | Edge toggles (NO_SAFE_ADS, API failure, test seed) |
 | [`?seed=golden-safe`](https://glassbox-ssp.vercel.app?seed=golden-safe) | Reproducible auction (same winner each run) |
 | [`?frozen=1`](https://glassbox-ssp.vercel.app?frozen=1) | Pin supply metrics (no bid jitter) |
-| [`?system=1`](https://glassbox-ssp.vercel.app?system=1) | Expand in-app system reference panel |
 
-During a run, the **Decision pipeline** panel and **run status** bar are the live view. The system reference panel (collapsed by default) duplicates this README — use [`?system=1`](https://glassbox-ssp.vercel.app?system=1) or [health JSON](https://glassbox-ssp.vercel.app/api/health) for a static snapshot.
+During a run, the **Decision pipeline** panel and **run status** bar are the live view. Architecture, API routes, and integration wiring live in this README and the [health JSON](https://glassbox-ssp.vercel.app/api/health) probe — not duplicated in the UI.
 
 ---
 

@@ -45,6 +45,7 @@ function panelSubtitle(
 function HomeContent() {
   const searchParams = useSearchParams();
   const debug = searchParams.get("debug") === "1";
+  const showSystem = searchParams.get("system") === "1" || debug;
   const walkthrough =
     searchParams.get("walkthrough") === "1" ||
     searchParams.get("presenter") === "1";
@@ -141,6 +142,7 @@ function HomeContent() {
         <TechnicalOverview
           status={demo.result?.integrations ?? demo.integrationStatus}
           lastRunMs={demo.result?.durationMs}
+          defaultOpen={showSystem}
         />
 
         <DemoBar

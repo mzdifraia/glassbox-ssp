@@ -32,6 +32,11 @@ export function DemoBar({
             {loadingLabel ?? "Running pipeline…"}
           </span>
         )}
+        {!loading && (
+          <span className="text-[10px] text-zinc-600">
+            Paced for clarity · <code className="text-zinc-500">?fast=1</code> to skip
+          </span>
+        )}
         {storyComplete && !loading && (
           <span className="text-[10px] text-emerald-400/90">✓ Both beats recorded</span>
         )}

@@ -9,6 +9,8 @@ import { RunContextBar } from "@/components/RunContextBar";
 import { DemoBar } from "@/components/DemoBar";
 import { IntegrationBadges } from "@/components/IntegrationBadges";
 import { PipelinePanel } from "@/components/PipelinePanel";
+import { BeatPauseBanner } from "@/components/BeatPauseBanner";
+import { FocusStrip } from "@/components/FocusStrip";
 import { PolicyBeat } from "@/components/PolicyBeat";
 import { PolicyMoment } from "@/components/PolicyMoment";
 import { TracePanel } from "@/components/TracePanel";
@@ -26,7 +28,8 @@ function HomeContent() {
     searchParams.get("frozen") === "1" ||
     searchParams.get("deterministic") === "1";
   const seedFromUrl = searchParams.get("seed") ?? "";
-  const demo = useGlassBoxDemo();
+  const fast = searchParams.get("fast") === "1";
+  const demo = useGlassBoxDemo({ paced: !fast });
 
   useEffect(() => {
     if (frozenFromUrl) demo.setFrozen(true);
@@ -40,7 +43,7 @@ function HomeContent() {
   const assistantDisplayed = useTypewriter(
     assistantFull,
     demo.typingAssistant,
-    10
+    demo.paced ? 32 : 12
   );
 
   useEffect(() => {
@@ -111,6 +114,22 @@ function HomeContent() {
 
         <PolicyBeat compact={presenter} />
 
+        <BeatPauseBanner message={demo.beatPause} />
+
+        <FocusStrip
+          label={
+            demo.typingAssistant
+              ? "Assistant response"
+              : demo.focusLabel ?? demo.liveStatus ?? "Ready"
+          }
+          detail={
+            demo.typingAssistant
+              ? "Typing answer after policy pipeline"
+              : demo.focusDetail
+          }
+          visible={demo.loading || demo.typingAssistant}
+        />
+
         <DemoBar
           loading={demo.loading}
           loadingLabel={demo.liveStatus ?? "Running pipeline…"}
@@ -124,7 +143,12 @@ function HomeContent() {
 
         <CompareSummary safe={demo.safeSnapshot} vulnerable={demo.vulnSnapshot} />
 
-        <PolicyMoment result={demo.result} loading={demo.loading} />
+        <PolicyMoment
+          result={demo.result}
+          loading={demo.loading}
+          showAfterTyping={demo.paced}
+          typingAssistant={demo.typingAssistant}
+        />
 
         {!presenter && <RunContextBar result={demo.result} />}
 
@@ -168,18 +192,21 @@ function HomeContent() {
               visibleCount={demo.stepsForPanel.length}
               loading={demo.loading}
               durationMs={demo.result?.durationMs}
+              paced={demo.paced}
             />
           </div>
 
           <div
             className={`flex flex-col gap-4 ${presenter ? "lg:col-span-6" : "lg:col-span-5"}`}
           >
-            <div ref={demo.auctionRef}>
-              <CandidateAuction
-                candidates={demo.candidatesForPanel}
-                message={demo.result?.candidateMessage}
-              />
-            </div>
+            {(demo.candidatesForPanel.length > 0 || !demo.loading) && (
+              <div ref={demo.auctionRef}>
+                <CandidateAuction
+                  candidates={demo.candidatesForPanel}
+                  message={demo.result?.candidateMessage}
+                />
+              </div>
+            )}
             <div ref={demo.receiptRef}>
               <TransparencyReceipt
                 receipt={demo.result?.receipt ?? null}

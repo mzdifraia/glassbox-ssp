@@ -4,6 +4,8 @@ import {
   SAFE_COMMERCIAL_PROMPT,
   VULNERABLE_PROMPT,
 } from "@/data/demoPrompts";
+import { delayBeforeEvent } from "@/lib/demo/consumePacedStream";
+import { DEMO_PACE, sleep } from "@/lib/demo/demoPace";
 import type {
   AttributionEvent,
   IntegrationStatus,
@@ -15,12 +17,22 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 export type DemoKind = "safe" | "vulnerable";
 
-export function useGlassBoxDemo() {
+export interface UseGlassBoxDemoOptions {
+  /** Client-side delays between stream events (default true). Use ?fast=1 to disable. */
+  paced?: boolean;
+}
+
+export function useGlassBoxDemo(options: UseGlassBoxDemoOptions = {}) {
+  const paced = options.paced ?? true;
+
   const [prompt, setPrompt] = useState("");
   const [result, setResult] = useState<PipelineResult | null>(null);
   const [liveSteps, setLiveSteps] = useState<PipelineStep[]>([]);
   const [liveCandidates, setLiveCandidates] = useState<PipelineResult["candidates"]>([]);
   const [liveStatus, setLiveStatus] = useState<string | null>(null);
+  const [focusLabel, setFocusLabel] = useState<string | null>(null);
+  const [focusDetail, setFocusDetail] = useState<string | null>(null);
+  const [beatPause, setBeatPause] = useState<string | null>(null);
   const [safeSnapshot, setSafeSnapshot] = useState<PipelineResult | null>(null);
   const [vulnSnapshot, setVulnSnapshot] = useState<PipelineResult | null>(null);
   const [extraEvents, setExtraEvents] = useState<AttributionEvent[]>([]);
@@ -49,20 +61,23 @@ export function useGlassBoxDemo() {
     setTimeout(() => {
       const el = suppressed ? receiptRef.current : auctionRef.current;
       el?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 400);
-  }, []);
+    }, paced ? DEMO_PACE.msBeforeScroll : 400);
+  }, [paced]);
 
   const runPipeline = useCallback(
     async (text: string, kind?: DemoKind) => {
       setLoading(true);
       setTypingAssistant(false);
       setError(null);
+      setBeatPause(null);
       setActivePrompt(text);
       setPrompt(text);
       setResult(null);
       setLiveSteps([]);
       setLiveCandidates([]);
       setLiveStatus("Starting publisher policy pipeline…");
+      setFocusLabel("Prompt safety gate");
+      setFocusDetail("Evaluating prompt against publisher policy");
 
       try {
         const res = await fetch("/api/run/stream", {
@@ -87,6 +102,15 @@ export function useGlassBoxDemo() {
         let buffer = "";
         let finalResult: PipelineResult | null = null as PipelineResult | null;
 
+        const processLine = async (line: string) => {
+          if (!line.trim()) return;
+          const event = JSON.parse(line) as PipelineStreamEvent;
+          await delayBeforeEvent(event, paced);
+          await applyStreamEvent(event, (r) => {
+            finalResult = r;
+          });
+        };
+
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
@@ -95,27 +119,27 @@ export function useGlassBoxDemo() {
           buffer = lines.pop() ?? "";
 
           for (const line of lines) {
-            if (!line.trim()) continue;
-            const event = JSON.parse(line) as PipelineStreamEvent;
-            applyStreamEvent(event, (r) => {
-              finalResult = r;
-            });
+            await processLine(line);
           }
         }
 
         if (buffer.trim()) {
-          const event = JSON.parse(buffer) as PipelineStreamEvent;
-          applyStreamEvent(event, (r) => {
-            finalResult = r;
-          });
+          await processLine(buffer);
         }
 
         if (!finalResult) {
           throw new Error("No result from pipeline");
         }
 
+        if (paced) {
+          setFocusLabel("Run complete");
+          setFocusDetail("Review auction and receipt below");
+          await sleep(DEMO_PACE.msBeforeTyping);
+        }
+
         setResult(finalResult);
         setLiveStatus(null);
+        setLoading(false);
         setTypingAssistant(true);
         scrollToHighlight(finalResult.auctionSuppressed);
 
@@ -149,17 +173,21 @@ export function useGlassBoxDemo() {
         setError(e instanceof Error ? e.message : "Something went wrong");
         setResult(null);
         setLiveStatus(null);
+        setFocusLabel(null);
+        setFocusDetail(null);
       } finally {
         setLoading(false);
       }
 
-      function applyStreamEvent(
+      async function applyStreamEvent(
         event: PipelineStreamEvent,
         onComplete: (r: PipelineResult) => void
       ) {
         switch (event.type) {
           case "status":
             setLiveStatus(event.message);
+            setFocusLabel(event.message);
+            setFocusDetail(null);
             break;
           case "step":
             setLiveSteps((prev) => {
@@ -171,9 +199,16 @@ export function useGlassBoxDemo() {
               }
               return [...prev, event.step];
             });
+            setFocusLabel(event.step.name);
+            setFocusDetail(event.step.reason);
+            setLiveStatus(null);
             break;
           case "candidates":
             setLiveCandidates(event.candidates);
+            setFocusLabel("Candidate auction");
+            setFocusDetail(
+              event.message ?? `${event.candidates.length} candidates evaluated`
+            );
             break;
           case "complete":
             setResult(event.result);
@@ -186,14 +221,27 @@ export function useGlassBoxDemo() {
         }
       }
     },
-    [forceNoSafeAds, frozen, scrollToHighlight, simulateApiFailure, testSeed]
+    [forceNoSafeAds, frozen, paced, scrollToHighlight, simulateApiFailure, testSeed]
   );
 
   const runFullStory = useCallback(async () => {
     await runPipeline(SAFE_COMMERCIAL_PROMPT, "safe");
-    await new Promise((r) => setTimeout(r, 600));
+
+    const pauseMs = paced ? DEMO_PACE.msBetweenStoryBeats : 600;
+    const steps = paced ? Math.ceil(pauseMs / 1000) : 1;
+
+    for (let s = steps; s > 0; s--) {
+      setBeatPause(
+        paced
+          ? `Pause — review the policy spotlight and auction. Step 2 (vulnerable) in ${s}s…`
+          : null
+      );
+      await sleep(paced ? 1000 : pauseMs);
+    }
+    setBeatPause(null);
+
     await runPipeline(VULNERABLE_PROMPT, "vulnerable");
-  }, [runPipeline]);
+  }, [paced, runPipeline]);
 
   const reset = useCallback(() => {
     setPrompt("");
@@ -201,6 +249,9 @@ export function useGlassBoxDemo() {
     setLiveSteps([]);
     setLiveCandidates([]);
     setLiveStatus(null);
+    setFocusLabel(null);
+    setFocusDetail(null);
+    setBeatPause(null);
     setActivePrompt(null);
     setSafeSnapshot(null);
     setVulnSnapshot(null);
@@ -247,6 +298,10 @@ export function useGlassBoxDemo() {
     result,
     activePrompt,
     liveStatus,
+    focusLabel,
+    focusDetail,
+    beatPause,
+    paced,
     stepsForPanel,
     candidatesForPanel,
     safeSnapshot,

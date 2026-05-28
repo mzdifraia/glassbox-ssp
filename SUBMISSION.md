@@ -25,9 +25,11 @@ Sell-Side & Measurement
 
 ## What to watch (90s)
 
-Open **presenter mode** and hit **Run full story**:
+Open **presenter mode** and hit **Run full story** (paced ~90s — pipeline steps land one at a time):
 
 https://glassbox-ssp.vercel.app?presenter=1
+
+Developers: add `?fast=1` to skip client pacing.
 
 1. **Safe commercial** — spotlight: *Higher bid did not win* (HyperBooks blocked)
 2. **Vulnerable** — spotlight: *Auction suppressed before any ad request*

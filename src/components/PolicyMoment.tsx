@@ -9,6 +9,9 @@ import type { PipelineResult } from "@/lib/types";
 interface PolicyMomentProps {
   result: PipelineResult | null;
   loading?: boolean;
+  /** Wait until typing finished so spotlight does not compete with pipeline. */
+  showAfterTyping?: boolean;
+  typingAssistant?: boolean;
 }
 
 function MomentCard({ moment }: { moment: PolicyMoment }) {
@@ -43,8 +46,14 @@ function MomentCard({ moment }: { moment: PolicyMoment }) {
   );
 }
 
-export function PolicyMoment({ result, loading }: PolicyMomentProps) {
+export function PolicyMoment({
+  result,
+  loading,
+  showAfterTyping,
+  typingAssistant,
+}: PolicyMomentProps) {
   if (loading) return null;
+  if (showAfterTyping && typingAssistant) return null;
   const moment = detectPolicyMoment(result);
   if (!moment) return null;
   return <MomentCard moment={moment} />;

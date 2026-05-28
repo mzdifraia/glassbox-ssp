@@ -14,6 +14,10 @@ interface ChatPanelProps {
   onForceNoSafeAdsChange: (value: boolean) => void;
   simulateApiFailure: boolean;
   onSimulateApiFailureChange: (value: boolean) => void;
+  frozen: boolean;
+  onFrozenChange: (value: boolean) => void;
+  testSeed: string;
+  onTestSeedChange: (value: string) => void;
   showAdvanced?: boolean;
 }
 
@@ -29,6 +33,10 @@ export function ChatPanel({
   onForceNoSafeAdsChange,
   simulateApiFailure,
   onSimulateApiFailureChange,
+  frozen,
+  onFrozenChange,
+  testSeed,
+  onTestSeedChange,
   showAdvanced = false,
 }: ChatPanelProps) {
   return (
@@ -78,6 +86,24 @@ export function ChatPanel({
               onChange={(e) => onSimulateApiFailureChange(e.target.checked)}
             />
             Simulate API failure
+          </label>
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={frozen}
+              onChange={(e) => onFrozenChange(e.target.checked)}
+            />
+            Freeze supply (rehearsal — no jitter)
+          </label>
+          <label className="flex flex-col gap-1">
+            <span>Test seed (reproducible auction)</span>
+            <input
+              type="text"
+              value={testSeed}
+              onChange={(e) => onTestSeedChange(e.target.value)}
+              placeholder="e.g. golden-safe — leave empty for live random"
+              className="rounded border border-zinc-700 bg-zinc-950 px-2 py-1 text-zinc-200"
+            />
           </label>
         </div>
       )}

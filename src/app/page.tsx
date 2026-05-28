@@ -3,20 +3,58 @@
 import { AttributionLog } from "@/components/AttributionLog";
 import { CandidateAuction } from "@/components/CandidateAuction";
 import { ChatPanel } from "@/components/ChatPanel";
+import { ChatThread } from "@/components/ChatThread";
 import { CompareSummary } from "@/components/CompareSummary";
+import { RunContextBar } from "@/components/RunContextBar";
 import { DemoBar } from "@/components/DemoBar";
 import { IntegrationBadges } from "@/components/IntegrationBadges";
 import { PipelinePanel } from "@/components/PipelinePanel";
-import { SponsoredResponse } from "@/components/SponsoredResponse";
 import { TracePanel } from "@/components/TracePanel";
 import { TransparencyReceipt } from "@/components/TransparencyReceipt";
 import { useGlassBoxDemo } from "@/hooks/useGlassBoxDemo";
+import { useTypewriter } from "@/hooks/useTypewriter";
 import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 
 function HomeContent() {
-  const debug = useSearchParams().get("debug") === "1";
+  const searchParams = useSearchParams();
+  const debug = searchParams.get("debug") === "1";
+  const presenter = searchParams.get("presenter") === "1";
+  const frozenFromUrl =
+    searchParams.get("frozen") === "1" ||
+    searchParams.get("deterministic") === "1";
+  const seedFromUrl = searchParams.get("seed") ?? "";
   const demo = useGlassBoxDemo();
+
+  useEffect(() => {
+    if (frozenFromUrl) demo.setFrozen(true);
+  }, [frozenFromUrl, demo.setFrozen]);
+
+  useEffect(() => {
+    if (seedFromUrl) demo.setTestSeed(seedFromUrl);
+  }, [seedFromUrl, demo.setTestSeed]);
+
+  const assistantFull = demo.result?.assistantMessage.content ?? "";
+  const assistantDisplayed = useTypewriter(
+    assistantFull,
+    demo.typingAssistant,
+    10
+  );
+
+  useEffect(() => {
+    if (
+      demo.typingAssistant &&
+      assistantFull &&
+      assistantDisplayed === assistantFull
+    ) {
+      demo.setTypingAssistant(false);
+    }
+  }, [
+    demo.typingAssistant,
+    assistantFull,
+    assistantDisplayed,
+    demo.setTypingAssistant,
+  ]);
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
@@ -35,8 +73,9 @@ function HomeContent() {
               </a>
             </div>
             <p className="mt-1 max-w-xl text-sm text-zinc-400">
-              Publisher-side trust and measurement for AI-native ads — safety is a
-              hard gate, not a scoring penalty.
+              Policy gates are rule-based. Auction variance is live by default; use a{" "}
+              <code className="text-cyan-400/90">seed</code> for reproducible tests (
+              <code className="text-cyan-400/90">npm test</code>).
             </p>
           </div>
           <IntegrationBadges
@@ -57,11 +96,7 @@ function HomeContent() {
 
         <DemoBar
           loading={demo.loading}
-          loadingLabel={
-            demo.result?.integrations.tavily === "live"
-              ? "Grounding claims (Tavily)…"
-              : "Running pipeline…"
-          }
+          loadingLabel={demo.liveStatus ?? "Running pipeline…"}
           onSafe={demo.runSafe}
           onVulnerable={demo.runVulnerable}
           onReset={demo.reset}
@@ -69,44 +104,58 @@ function HomeContent() {
 
         <CompareSummary safe={demo.safeSnapshot} vulnerable={demo.vulnSnapshot} />
 
-        <div className="grid gap-4 lg:grid-cols-12">
-          <div className="lg:col-span-3">
-            <ChatPanel
-              prompt={demo.prompt}
-              onPromptChange={demo.setPrompt}
-              onRunSafe={demo.runSafe}
-              onRunVulnerable={demo.runVulnerable}
-              onReset={demo.reset}
-              onRun={() => void demo.runPipeline(demo.prompt)}
-              loading={demo.loading}
-              forceNoSafeAds={demo.forceNoSafeAds}
-              onForceNoSafeAdsChange={demo.setForceNoSafeAds}
-              simulateApiFailure={demo.simulateApiFailure}
-              onSimulateApiFailureChange={demo.setSimulateApiFailure}
-              showAdvanced={debug}
-            />
-          </div>
+        <RunContextBar result={demo.result} />
 
-          <div className="flex flex-col gap-4 lg:col-span-5">
+        <div className="grid gap-4 lg:grid-cols-12">
+          {!presenter && (
+            <div className="lg:col-span-3">
+              <ChatPanel
+                prompt={demo.prompt}
+                onPromptChange={demo.setPrompt}
+                onRunSafe={demo.runSafe}
+                onRunVulnerable={demo.runVulnerable}
+                onReset={demo.reset}
+                onRun={() => void demo.runPipeline(demo.prompt)}
+                loading={demo.loading}
+                forceNoSafeAds={demo.forceNoSafeAds}
+                onForceNoSafeAdsChange={demo.setForceNoSafeAds}
+                simulateApiFailure={demo.simulateApiFailure}
+                onSimulateApiFailureChange={demo.setSimulateApiFailure}
+                frozen={demo.frozen}
+                onFrozenChange={demo.setFrozen}
+                testSeed={demo.testSeed}
+                onTestSeedChange={demo.setTestSeed}
+                showAdvanced={debug}
+              />
+            </div>
+          )}
+
+          <div
+            className={`flex flex-col gap-4 ${presenter ? "lg:col-span-5" : "lg:col-span-4"}`}
+          >
+            <ChatThread
+              userPrompt={demo.activePrompt}
+              liveStatus={demo.liveStatus}
+              loading={demo.loading}
+              assistantText={assistantDisplayed}
+              typingAssistant={demo.typingAssistant}
+              result={demo.result}
+            />
             <PipelinePanel
-              steps={demo.result?.steps ?? []}
-              visibleCount={demo.result ? demo.visibleStepCount : 0}
+              steps={demo.stepsForPanel}
+              visibleCount={demo.stepsForPanel.length}
               loading={demo.loading}
               durationMs={demo.result?.durationMs}
             />
+          </div>
+
+          <div className={`flex flex-col gap-4 ${presenter ? "lg:col-span-4" : "lg:col-span-5"}`}>
             <div ref={demo.auctionRef}>
               <CandidateAuction
-                candidates={demo.result?.candidates ?? []}
+                candidates={demo.candidatesForPanel}
                 message={demo.result?.candidateMessage}
               />
             </div>
-          </div>
-
-          <div className="flex flex-col gap-4 lg:col-span-4">
-            <SponsoredResponse
-              assistant={demo.result?.assistantMessage ?? null}
-              sponsored={demo.result?.sponsored ?? null}
-            />
             <div ref={demo.receiptRef}>
               <TransparencyReceipt
                 receipt={demo.result?.receipt ?? null}
@@ -114,8 +163,10 @@ function HomeContent() {
               />
             </div>
           </div>
+        </div>
 
-          <div className="lg:col-span-6">
+        {!presenter && (
+          <div className="grid gap-4 lg:grid-cols-2">
             <AttributionLog
               events={demo.allEvents}
               impressionId={demo.result?.impressionId}
@@ -129,12 +180,9 @@ function HomeContent() {
                 demo.addEvent("conversion_recorded", "Conversion pixel fired")
               }
             />
-          </div>
-
-          <div className="lg:col-span-6">
             <TracePanel result={demo.result} />
           </div>
-        </div>
+        )}
       </main>
     </div>
   );

@@ -7,6 +7,9 @@ export async function POST(request: Request) {
       prompt?: string;
       simulateApiFailure?: boolean;
       forceNoSafeAds?: boolean;
+      deterministic?: boolean;
+      frozen?: boolean;
+      seed?: string | number;
     };
 
     const prompt = body.prompt?.trim();
@@ -20,6 +23,9 @@ export async function POST(request: Request) {
     const result = await runPipeline(prompt, {
       simulateApiFailure: body.simulateApiFailure,
       forceNoSafeAds: body.forceNoSafeAds,
+      deterministic: body.deterministic,
+      frozen: body.frozen,
+      seed: body.seed,
     });
 
     return NextResponse.json(result);

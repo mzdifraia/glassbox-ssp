@@ -1,3 +1,4 @@
+/** Post-hack go-to-market supply. Not used during the hackathon demo unless ENABLE_THRAD_GTM=1. */
 import type { AdCandidate } from "@/lib/types";
 import { AdProviderError, type AdProvider, type AdProviderInput } from "./AdProvider";
 

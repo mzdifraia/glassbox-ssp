@@ -18,13 +18,13 @@ It helps AI apps:
 
 Sell-Side & Measurement
 
-## Sponsor tools
+## Sponsor tools (hackathon)
 
-- **Cursor**: built with Cursor; receipt/policy agent workflow
-- **Thrad**: ad-provider adapter for native sponsored responses
-- **Tavily**: claim grounding for candidate ads
-- **Overmind**: trace/evaluation-ready decision log
-- **Alpic**: optional tool endpoint deployment if time permits
+- **Cursor** — built with Cursor; receipt/policy agent workflow
+- **Tavily** — claim grounding for candidate ads
+- **Overmind** — trace/evaluation-ready decision log
+
+**Thrad is for after the hack.** Build and demo the publisher trust layer on **stub supply** now; plug in the `ThradProvider` adapter at go-to-market (`ENABLE_THRAD_GTM=1` + `THRAD_API_KEY`). The `AdProvider` boundary is already there so you do not rework policy, receipts, or attribution.
 
 ## Key principle
 
@@ -35,12 +35,39 @@ Safety is a hard gate before scoring. A high bid can never override policy.
 ```bash
 npm install
 cp env.example .env.local   # add TAVILY_API_KEY=tvly-... on the same line as the variable name
+npm test                    # policy + seeded auction tests
 npm run dev
 ```
 
+Health check: `GET /api/health` after deploy.
+
 Open [http://localhost:3000](http://localhost:3000).
 
-**Presenter mode:** default UI hides debug toggles. Add `?debug=1` for NO_SAFE_ADS / API failure tests.
+**Presenter mode:** default UI hides debug toggles. Add `?debug=1` for NO_SAFE_ADS / API failure / test seed.
+
+## Testing & auction variance
+
+Policy gates (vulnerability, unsupported claims, category blocks) are **rule-based and stable**. Supply auction noise is **non-deterministic by default** so the demo feels live.
+
+| Mode | How | Use when |
+|------|-----|----------|
+| **Live** | No `seed` in request | Demos, judges — winner/bids can change each run |
+| **Seeded** | `seed: "golden-safe"` in API body or `?seed=golden-safe` | Reproducible tests & bug reports |
+| **Frozen** | `frozen: true` or `?frozen=1` | Rehearsal with pinned bids (Ledgerly baseline) |
+
+```bash
+npm test          # Vitest — same seed ⇒ same winner; policy cases pinned
+npm run test:watch
+```
+
+Example API call for a stable integration test:
+
+```bash
+curl -s -X POST http://localhost:3000/api/run \
+  -H 'Content-Type: application/json' \
+  -d '{"prompt":"I'\''m choosing accounting software for my 12-person startup.","seed":"golden-safe"}' \
+  | jq '.sponsored.advertiser'
+```
 
 ## Overmind (open source)
 
@@ -56,22 +83,23 @@ No hosted Overmind API required — clone `overmind-core/overmind` and point eva
 
 | Variable | Description |
 |----------|-------------|
-| `THRAD_API_KEY` | Enables live Thrad ad provider (falls back to stub if unset) |
 | `TAVILY_API_KEY` | Enables Tavily claim grounding (falls back to stub if unset) |
-| `THRAD_API_URL` | Optional Thrad endpoint override |
-| `SIMULATE_THRAD_FAILURE` | Set to `1` to force API failure demo path |
+| `THRAD_API_KEY` | **Post-hack GTM only** — live Thrad supply (ignored unless `ENABLE_THRAD_GTM=1`) |
+| `ENABLE_THRAD_GTM` | Set to `1` to use Thrad instead of stub (not needed for hackathon demo) |
+| `THRAD_API_URL` | Optional Thrad endpoint override (GTM) |
+| `SIMULATE_THRAD_FAILURE` | Set to `1` to force ad-provider failure path (stub or Thrad) |
 | `OVERMIND_TRACE_ID` | If set, displayed in trace panel (not faked) |
 | `CURSOR_API_KEY` | Optional — for future receipt agent scripts |
 
 Copy `.env.local.example` to `.env.local` and fill in keys as needed.
 
-> The Thrad adapter is isolated behind `AdProvider`; live credentials can be swapped in without changing the policy or receipt layer.
+> Demo runs on **stub candidates** by design. Thrad ships when you go to market — the adapter is isolated behind `AdProvider` so policy, receipts, and attribution stay unchanged.
 
 ## Demo script
 
 1. **Opening line:** “Everyone can insert an ad into a chat. GlassBox decides whether an ad should appear, which one earns the placement, why it won, and how the whole decision can be audited.”
 
-2. Click **Run safe commercial prompt** — Ledgerly wins; HyperBooks blocked for unsupported claim; transparency receipt shows full audit trail.
+2. Click **Run safe commercial prompt** — a safe accounting advertiser wins (varies live); HyperBooks always blocked for unsupported claim; transparency receipt shows full audit trail.
 
 3. **Vulnerability beat:** “Now here’s the dangerous case. This is high commercial intent, but it is also vulnerability.”
 
@@ -97,9 +125,9 @@ Copy `.env.local.example` to `.env.local` and fill in keys as needed.
 
 **Track:** Sell-Side & Measurement
 
-**Technologies used:** Next.js, TypeScript, Tailwind, Cursor, Tavily, Overmind-ready traces, Thrad adapter (stub fallback)
+**Technologies used:** Next.js, TypeScript, Tailwind, Cursor, Tavily, Overmind-ready traces; stub supply for hack (Thrad adapter ready for GTM)
 
-**Notes:** Publisher-side trust and measurement layer around conversational ads. Includes prompt eligibility gates, hard safety suppression before scoring, Tavily-style claim checks, transparent receipts, attribution events, and Overmind-ready traces. Thrad adapter supports real API credentials if available, with stub fallback.
+**Notes:** Publisher-side trust and measurement layer around conversational ads. Hackathon demo uses stub ad supply; Thrad integration is post-hack go-to-market behind `AdProvider`.
 
 ## Architecture
 
@@ -107,7 +135,7 @@ Copy `.env.local.example` to `.env.local` and fill in keys as needed.
 User prompt
 → prompt safety gate
 → intent classifier
-→ ad candidate provider / Thrad adapter
+→ ad candidate provider (stub at hack; Thrad adapter at GTM)
 → candidate safety gate
 → Tavily claim grounding
 → score surviving candidates

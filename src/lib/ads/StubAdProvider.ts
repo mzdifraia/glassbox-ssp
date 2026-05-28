@@ -7,11 +7,18 @@ export class StubAdProvider implements AdProvider {
     const all = getStubCandidates();
 
     if (input.intent.includes("accounting")) {
-      return all.map((c) => ({
-        ...c,
-        status: "eligible" as const,
-        reason: "",
-      }));
+      return all
+        .filter(
+          (c) =>
+            c.category.startsWith("b2b.finance.accounting") ||
+            c.category === "b2b.finance.tax" ||
+            c.category === "b2b.finance.invoicing"
+        )
+        .map((c) => ({
+          ...c,
+          status: "eligible" as const,
+          reason: "",
+        }));
     }
 
     return all.map((c) => ({ ...c, status: "eligible" as const, reason: "" }));

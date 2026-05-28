@@ -19,7 +19,7 @@ export function DemoBar({
     <section className="rounded-xl border border-cyan-800/40 bg-gradient-to-r from-cyan-950/40 to-zinc-900/80 p-4 shadow-lg shadow-cyan-950/20">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-xs font-semibold uppercase tracking-wider text-cyan-400">
-          Live demo script
+          Policy test cases
         </h2>
         {loading && (
           <span className="text-[10px] text-cyan-300/80 animate-pulse">
@@ -37,7 +37,7 @@ export function DemoBar({
           <span className="block text-[10px] uppercase opacity-80">Step 1</span>
           Safe commercial
           <span className="mt-1 block text-[11px] font-normal opacity-90">
-            “Everyone can insert an ad — we decide if it should appear.”
+            Winner may change each run (bid jitter). HyperBooks still blocked by policy.
           </span>
         </button>
         <button

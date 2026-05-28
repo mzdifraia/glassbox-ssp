@@ -23,6 +23,15 @@ export function CompareSummary({ safe, vulnerable }: CompareSummaryProps) {
               <li>Ad request: {safe.receipt.adRequestMade ? "Yes" : "No"}</li>
               <li>Decision: {safe.receipt.placementDecision}</li>
               <li>Winner: {safe.receipt.winnerAdvertiser ?? "—"}</li>
+              <li>
+                HyperBooks:{" "}
+                {safe.candidates.find((c) => c.id === "hyperbooks")?.status ??
+                  "—"}{" "}
+                (policy, not score)
+              </li>
+              <li className="text-zinc-500">
+                Supply: {safe.runMeta.supplyProvider} · {safe.runMeta.auctionMode}
+              </li>
             </ul>
           ) : (
             <p className="mt-2 text-zinc-500">Run step 1</p>

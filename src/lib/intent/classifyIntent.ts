@@ -1,8 +1,17 @@
+import type { RunVariance } from "@/lib/supply/runVariance";
+import { jitterConfidence } from "@/lib/supply/runVariance";
 import type { IntentResult, PromptSafetyCategory } from "@/lib/types";
+
+const ACCOUNTING_REASONS = [
+  "B2B accounting software research for a small company",
+  "SMB bookkeeping and GL evaluation intent",
+  "Finance stack shortlist for a growing team",
+] as const;
 
 export function classifyIntent(
   prompt: string,
-  promptCategory: PromptSafetyCategory
+  promptCategory: PromptSafetyCategory,
+  variance?: RunVariance
 ): IntentResult {
   const normalized = prompt.toLowerCase();
 
@@ -17,8 +26,12 @@ export function classifyIntent(
   if (/accounting|bookkeeping|ledger/i.test(normalized)) {
     return {
       intent: "b2b.finance.accounting",
-      confidence: 0.93,
-      reason: "B2B accounting software research for a small company",
+      confidence: variance
+        ? jitterConfidence(0.93, variance)
+        : 0.93,
+      reason: variance
+        ? variance.pick(ACCOUNTING_REASONS)
+        : ACCOUNTING_REASONS[0],
     };
   }
 

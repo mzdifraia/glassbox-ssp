@@ -1,5 +1,17 @@
 import type { IntegrationStatus, PipelineStep } from "@/lib/types";
+import type { PipelineProgressHandler } from "./streamEvents";
 import { PIPELINE_STEP_IDS, PIPELINE_STEP_NAMES } from "./constants";
+
+export async function pushStep(
+  steps: PipelineStep[],
+  step: PipelineStep,
+  onProgress?: PipelineProgressHandler
+): Promise<void> {
+  steps.push(step);
+  if (onProgress) {
+    await onProgress({ type: "step", step });
+  }
+}
 
 export function makeStep(
   id: string,

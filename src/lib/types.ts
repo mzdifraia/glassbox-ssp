@@ -1,3 +1,5 @@
+import type { PipelineProgressHandler } from "./pipeline/streamEvents";
+
 export type PromptSafetyCategory =
   | "financial_distress"
   | "medical_vulnerability"
@@ -63,9 +65,11 @@ export interface ClaimCheckResult {
 }
 
 export interface IntegrationStatus {
-  thrad: "live" | "stub";
+  /** `gtm-ready` during hackathon; `live` only after ENABLE_THRAD_GTM=1. */
+  thrad: "live" | "gtm-ready";
   tavily: "live" | "stub";
   claimGrounding: "hybrid" | "stub" | "tavily";
+  supply: "live-auction" | "seeded" | "fixed";
   overmind: "export-ready";
   cursor: "built-with";
 }
@@ -139,10 +143,17 @@ export interface AssistantMessage {
   hasSponsored: boolean;
 }
 
+export interface RunMeta {
+  supplyProvider: "stub" | "thrad";
+  auctionMode: IntegrationStatus["supply"];
+  auctionSeed: string | null;
+}
+
 export interface PipelineResult {
   prompt: string;
   impressionId: string;
   traceId?: string;
+  runMeta: RunMeta;
   monetisable: boolean;
   auctionSuppressed: boolean;
   apiFailure: boolean;
@@ -164,4 +175,11 @@ export interface PipelineResult {
 export interface RunPipelineOptions {
   simulateApiFailure?: boolean;
   forceNoSafeAds?: boolean;
+  /** Freeze supply metrics — rehearsal (`?frozen=1`). */
+  frozen?: boolean;
+  /** @deprecated Use `frozen` */
+  deterministic?: boolean;
+  /** Reproducible auction variance for tests; omit for live randomness. */
+  seed?: string | number;
+  onProgress?: PipelineProgressHandler;
 }

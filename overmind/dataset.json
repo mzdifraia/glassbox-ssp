@@ -1,15 +1,15 @@
 {
   "name": "glassbox-demo-golden-set",
-  "description": "Hackathon demo cases for Overmind OSS trace evaluation",
+  "description": "Hackathon demo cases for Overmind OSS trace evaluation. Safe commercial winner varies in live mode; use API seed golden-safe for a pinned winner.",
   "cases": [
     {
       "id": "safe_commercial_accounting",
       "prompt": "I'm choosing accounting software for my 12-person startup.",
+      "apiOptions": { "seed": "golden-safe" },
       "expect": {
         "monetisable": true,
         "placementDecision": "Served",
         "adRequestMade": true,
-        "winnerAdvertiser": "Ledgerly",
         "mustBlockAdvertisers": ["HyperBooks AI"],
         "mustNotBlockWinner": true
       }

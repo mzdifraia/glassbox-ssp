@@ -13,7 +13,8 @@ function Badge({
   label: string;
   mode: string;
 }) {
-  const live = mode === "live";
+  const live =
+    mode === "live" || mode === "live-auction" || mode === "seeded";
   const exportReady = mode === "export-ready";
   return (
     <span
@@ -35,7 +36,8 @@ export function IntegrationBadges({ status }: IntegrationBadgesProps) {
 
   return (
     <div className="flex flex-wrap gap-2">
-      <Badge label="Thrad" mode={status.thrad} />
+      <Badge label="Supply" mode={status.supply} />
+      <Badge label="Thrad (GTM)" mode={status.thrad} />
       <Badge label="Tavily" mode={status.tavily} />
       <Badge label="Claims" mode={status.claimGrounding} />
       <Badge label="Overmind" mode={status.overmind} />

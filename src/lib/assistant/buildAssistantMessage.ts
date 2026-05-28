@@ -1,4 +1,14 @@
+import type { RunVariance } from "@/lib/supply/runVariance";
 import type { AssistantMessage, IntentResult, PromptSafetyResult } from "@/lib/types";
+
+const ACCOUNTING_OPENERS = [
+  (team: string) =>
+    `For ${team} evaluating accounting software, prioritise multi-user access, bank feeds, audit trails, and reporting that scales with headcount.`,
+  (team: string) =>
+    `When ${team} is shortlisting accounting tools, weigh close speed, bank reconciliation, role-based approvals, and how reporting holds up as you hire.`,
+  (team: string) =>
+    `${team} comparing accounting platforms should sanity-check integrations, audit trails, and whether multi-entity support is needed before you buy.`,
+] as const;
 
 export function buildAssistantMessage(
   prompt: string,
@@ -8,9 +18,11 @@ export function buildAssistantMessage(
     intent: IntentResult;
     promptSafety: PromptSafetyResult;
     winnerName?: string;
+    variance?: RunVariance;
   }
 ): AssistantMessage {
-  const { hasSponsored, apiFailure, intent, promptSafety, winnerName } = opts;
+  const { hasSponsored, apiFailure, intent, promptSafety, winnerName, variance } =
+    opts;
 
   if (apiFailure) {
     return {
@@ -30,9 +42,13 @@ export function buildAssistantMessage(
   }
 
   if (hasSponsored && intent.intent.includes("accounting")) {
+    const team = extractTeamHint(prompt);
+    const opener = variance
+      ? variance.pick(ACCOUNTING_OPENERS)(team)
+      : ACCOUNTING_OPENERS[0](team);
     return {
       role: "assistant",
-      content: `For ${extractTeamHint(prompt)} evaluating accounting software, prioritise multi-user access, bank feeds, audit trails, and reporting that scales with headcount. Below is one sponsored option that cleared our safety and transparency checks${winnerName ? ` (${winnerName})` : ""}.`,
+      content: `${opener} Below is one sponsored option that cleared our safety and transparency checks${winnerName ? ` (${winnerName})` : ""}.`,
       hasSponsored: true,
     };
   }

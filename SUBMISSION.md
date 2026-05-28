@@ -18,12 +18,12 @@ Sell-Side & Measurement
 - Next.js 16, TypeScript, Tailwind
 - **Cursor** — built with Cursor
 - **Tavily** — hybrid claim grounding (policy hard-block + live search)
-- **Thrad** — `AdProvider` adapter (stub fallback)
 - **Overmind OSS** — trace export, `overmind/policies.md`, `overmind/dataset.json`
+- **Stub supply** for the hackathon demo (Thrad `AdProvider` adapter in repo for **post-hack GTM**, not required to judge)
 
 ## What to watch (90s)
 
-1. **Step 1 · Safe commercial** — Ledgerly wins; HyperBooks higher bid **blocked by policy**
+1. **Step 1 · Safe commercial** — safe advertiser wins (varies live); HyperBooks higher bid **blocked by policy**
 2. **Step 2 · Vulnerable** — auction suppressed **before** ad request
 3. **Transparency receipt** — full audit trail
 4. **Export trace JSON** — Overmind-ready

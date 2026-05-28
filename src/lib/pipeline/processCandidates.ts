@@ -1,6 +1,7 @@
 import { groundClaimsWithTavily } from "@/lib/claims/groundClaims";
 import { checkCandidateSafety } from "@/lib/safety/candidateSafety";
 import { scoreSurvivors } from "@/lib/scoring/scoreCandidates";
+import type { RunVariance } from "@/lib/supply/runVariance";
 import type {
   AdCandidate,
   ClaimCheckResult,
@@ -22,6 +23,7 @@ export async function processCandidates(
   context: {
     intent: string;
     promptCategory: PromptSafetyCategory;
+    variance?: RunVariance;
   }
 ): Promise<ProcessCandidatesResult> {
   const claimChecks = new Map<string, ClaimCheckResult>();
@@ -61,7 +63,10 @@ export async function processCandidates(
   const blockedCount = evaluated.filter((c) => c.status === "blocked").length;
 
   const scoreStart = Date.now();
-  const { scored: rawScored, winner } = scoreSurvivors(evaluated);
+  const { scored: rawScored, winner } = scoreSurvivors(
+    evaluated,
+    context.variance
+  );
   const scoringMs = Date.now() - scoreStart;
 
   const scored = winner

@@ -8,6 +8,10 @@ export interface OvermindExportBundle {
   policyRef: "overmind/policies.md";
   datasetRef: "overmind/dataset.json";
   placementDecision: string;
+  runMeta: PipelineResult["runMeta"];
+  integrations: PipelineResult["integrations"];
+  winnerAdvertiser?: string;
+  blockedAdvertisers: string[];
   trace: PipelineResult["trace"];
   policyIds: string[];
 }
@@ -28,6 +32,12 @@ export function buildOvermindExport(result: PipelineResult): OvermindExportBundl
     policyRef: "overmind/policies.md",
     datasetRef: "overmind/dataset.json",
     placementDecision: result.receipt.placementDecision,
+    runMeta: result.runMeta,
+    integrations: result.integrations,
+    winnerAdvertiser: result.receipt.winnerAdvertiser,
+    blockedAdvertisers: result.candidates
+      .filter((c) => c.status === "blocked")
+      .map((c) => c.advertiser),
     trace: result.trace,
     policyIds: [...new Set(policyIds)],
   };

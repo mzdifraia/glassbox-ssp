@@ -14,41 +14,75 @@ import type {
   RunPipelineOptions,
   SponsoredContent,
 } from "@/lib/types";
+import { buildRunMeta } from "@/lib/run/buildRunMeta";
+import { getSupplyProviderLabel } from "@/lib/ads/provider";
+import {
+  applySupplyVariance,
+  createRunVariance,
+  jitterConfidence,
+  supplyModeFromVariance,
+  varianceIsActive,
+} from "@/lib/supply/runVariance";
 import { createImpressionId, createPhaseTimer } from "@/lib/utils/latency";
 import {
   appendSkippedSteps,
   claimGroundingReason,
   makeStep,
+  pushStep,
 } from "./buildSteps";
 import { buildSponsored } from "./buildSponsored";
 import { PIPELINE_STEP_IDS, PIPELINE_STEP_NAMES } from "./constants";
 import { processCandidates } from "./processCandidates";
+import type { PipelineProgressHandler } from "./streamEvents";
+
+async function status(
+  onProgress: PipelineProgressHandler | undefined,
+  message: string
+) {
+  if (onProgress) await onProgress({ type: "status", message });
+}
 
 export async function runPipeline(
   prompt: string,
   options: RunPipelineOptions = {}
 ): Promise<PipelineResult> {
+  const onProgress = options.onProgress;
+  const variance = createRunVariance({
+    frozen: options.frozen ?? options.deterministic,
+    seed: options.seed,
+  });
   const startedAt = Date.now();
   const phase = createPhaseTimer();
   const impressionId = createImpressionId();
-  const integrations = getIntegrationStatus();
+  const integrations = {
+    ...getIntegrationStatus(),
+    supply: supplyModeFromVariance(variance),
+  };
   const traceId = process.env.OVERMIND_TRACE_ID;
   const simulateApiFailure =
     options.simulateApiFailure ||
     process.env.SIMULATE_THRAD_FAILURE === "1";
 
-  const promptSafety = checkPromptSafety(prompt);
+  await status(onProgress, "Evaluating prompt against publisher policy…");
+
+  let promptSafety = checkPromptSafety(prompt);
+  if (varianceIsActive(variance) && promptSafety.monetisable) {
+    promptSafety = {
+      ...promptSafety,
+      confidence: jitterConfidence(promptSafety.confidence, variance),
+    };
+  }
   const promptSafetyMs = phase.lap();
-  const intent = classifyIntent(prompt, promptSafety.category);
+  const intent = classifyIntent(prompt, promptSafety.category, variance);
   const intentMs = phase.lap();
 
   const steps: PipelineStep[] = [];
   const attributionEvents: AttributionEvent[] = [];
   const now = () => new Date().toISOString();
-
   const traceTimings: TraceTimings = { promptSafetyMs, intentMs };
 
-  steps.push(
+  await pushStep(
+    steps,
     makeStep(
       PIPELINE_STEP_IDS[0],
       PIPELINE_STEP_NAMES[0],
@@ -57,6 +91,10 @@ export async function runPipeline(
       promptSafety.reason,
       promptSafetyMs
     ),
+    onProgress
+  );
+  await pushStep(
+    steps,
     makeStep(
       PIPELINE_STEP_IDS[1],
       PIPELINE_STEP_NAMES[1],
@@ -64,11 +102,17 @@ export async function runPipeline(
       intent.confidence,
       intent.reason,
       intentMs
-    )
+    ),
+    onProgress
   );
 
   if (!promptSafety.monetisable) {
+    await status(onProgress, "Vulnerable context — suppressing auction…");
     appendSkippedSteps(steps, 2, "Skipped — auction suppressed");
+    for (const step of steps.slice(2)) {
+      await onProgress?.({ type: "step", step });
+    }
+
     attributionEvents.push({
       id: `evt_${Date.now()}`,
       type: "suppression_logged",
@@ -88,9 +132,8 @@ export async function runPipeline(
       noSafeAds: false,
     });
     traceTimings.receiptMs = phase.lap();
-    traceTimings.attributionMs = phase.lap();
 
-    return finalize({
+    const result = finalize({
       prompt,
       impressionId,
       traceId,
@@ -126,17 +169,25 @@ export async function runPipeline(
       ),
       intent,
       promptSafety,
+      variance,
     });
+
+    await onProgress?.({ type: "candidates", candidates: [], message: result.candidateMessage });
+    await onProgress?.({ type: "complete", result });
+    return result;
   }
 
   let candidates: AdCandidate[] = [];
   let apiFailure = false;
   let candidatesMs = 0;
 
+  await status(onProgress, "Requesting candidates from supply adapter…");
+
   if (simulateApiFailure) {
     apiFailure = true;
     candidatesMs = phase.lap();
-    steps.push(
+    await pushStep(
+      steps,
       makeStep(
         PIPELINE_STEP_IDS[2],
         PIPELINE_STEP_NAMES[2],
@@ -144,29 +195,36 @@ export async function runPipeline(
         0,
         "Ad provider API failure — serving normal answer without ads",
         candidatesMs
-      )
+      ),
+      onProgress
     );
   } else {
     try {
-      candidates = await getAdProvider().getCandidates({
-        prompt,
-        intent: intent.intent,
-      });
+      candidates = applySupplyVariance(
+        await getAdProvider().getCandidates({
+          prompt,
+          intent: intent.intent,
+        }),
+        variance
+      );
       candidatesMs = phase.lap();
-      steps.push(
+      await pushStep(
+        steps,
         makeStep(
           PIPELINE_STEP_IDS[2],
           PIPELINE_STEP_NAMES[2],
           "passed",
           0.88,
-          `Retrieved ${candidates.length} candidates`,
+          `Retrieved ${candidates.length} candidates (${getSupplyProviderLabel()} supply)`,
           candidatesMs
-        )
+        ),
+        onProgress
       );
     } catch (err) {
       apiFailure = true;
       candidatesMs = phase.lap();
-      steps.push(
+      await pushStep(
+        steps,
         makeStep(
           PIPELINE_STEP_IDS[2],
           PIPELINE_STEP_NAMES[2],
@@ -176,7 +234,8 @@ export async function runPipeline(
             ? err.message
             : "Ad provider unavailable",
           candidatesMs
-        )
+        ),
+        onProgress
       );
     }
   }
@@ -197,7 +256,7 @@ export async function runPipeline(
     });
     traceTimings.receiptMs = phase.lap();
 
-    return finalize({
+    const result = finalize({
       prompt,
       impressionId,
       traceId,
@@ -238,7 +297,10 @@ export async function runPipeline(
       ),
       intent,
       promptSafety,
+      variance,
     });
+    await onProgress?.({ type: "complete", result });
+    return result;
   }
 
   let scored: AdCandidate[];
@@ -248,6 +310,13 @@ export async function runPipeline(
   let candidateSafetyMs = 0;
   let scoringMs = 0;
 
+  await status(
+    onProgress,
+    integrations.tavily === "live"
+      ? "Grounding claims (Tavily) and running safety gates…"
+      : "Running claim checks and safety gates…"
+  );
+
   if (options.forceNoSafeAds) {
     scored = candidates.map((c) => ({
       ...c,
@@ -256,14 +325,12 @@ export async function runPipeline(
     }));
     winner = null;
     blockedCount = scored.length;
-    const blockMs = phase.lap();
-    claimGroundingMs = blockMs;
-    candidateSafetyMs = 0;
-    scoringMs = 0;
+    phase.lap();
   } else {
     const processed = await processCandidates(candidates, {
       intent: intent.intent,
       promptCategory: promptSafety.category,
+      variance,
     });
     scored = processed.scored;
     winner = processed.winner;
@@ -277,7 +344,10 @@ export async function runPipeline(
   traceTimings.candidateSafetyMs = candidateSafetyMs;
   traceTimings.scoringMs = scoringMs;
 
-  steps.push(
+  await onProgress?.({ type: "candidates", candidates: scored });
+
+  await pushStep(
+    steps,
     makeStep(
       PIPELINE_STEP_IDS[3],
       PIPELINE_STEP_NAMES[3],
@@ -286,6 +356,10 @@ export async function runPipeline(
       claimGroundingReason(integrations),
       claimGroundingMs
     ),
+    onProgress
+  );
+  await pushStep(
+    steps,
     makeStep(
       PIPELINE_STEP_IDS[4],
       PIPELINE_STEP_NAMES[4],
@@ -294,6 +368,10 @@ export async function runPipeline(
       `${blockedCount} blocked, ${scored.length - blockedCount} survivors`,
       candidateSafetyMs
     ),
+    onProgress
+  );
+  await pushStep(
+    steps,
     makeStep(
       PIPELINE_STEP_IDS[5],
       PIPELINE_STEP_NAMES[5],
@@ -301,17 +379,20 @@ export async function runPipeline(
       winner ? 0.92 : 0.5,
       winner ? `Winner: ${winner.advertiser}` : "No eligible winner",
       scoringMs
-    )
+    ),
+    onProgress
   );
 
-  // Drain gap between fetch and processCandidates (timed above) from later steps
   phase.lap();
+
+  await status(onProgress, "Rendering sponsored placement and transparency receipt…");
 
   const sponsored = buildSponsored(winner, intent);
   const sponsoredMs = phase.lap();
   const noSafeAds = !winner;
 
-  steps.push(
+  await pushStep(
+    steps,
     makeStep(
       PIPELINE_STEP_IDS[6],
       PIPELINE_STEP_NAMES[6],
@@ -319,7 +400,8 @@ export async function runPipeline(
       winner ? 0.95 : 0.5,
       winner ? "Sponsored placement rendered" : "No sponsored placement",
       sponsoredMs
-    )
+    ),
+    onProgress
   );
 
   const receipt = buildReceipt({
@@ -334,7 +416,8 @@ export async function runPipeline(
   });
   traceTimings.receiptMs = phase.lap();
 
-  steps.push(
+  await pushStep(
+    steps,
     makeStep(
       PIPELINE_STEP_IDS[7],
       PIPELINE_STEP_NAMES[7],
@@ -342,7 +425,8 @@ export async function runPipeline(
       0.98,
       `Placement: ${receipt.placementDecision}`,
       traceTimings.receiptMs
-    )
+    ),
+    onProgress
   );
 
   if (winner) {
@@ -357,7 +441,8 @@ export async function runPipeline(
 
   traceTimings.attributionMs = phase.lap();
 
-  steps.push(
+  await pushStep(
+    steps,
     makeStep(
       PIPELINE_STEP_IDS[8],
       PIPELINE_STEP_NAMES[8],
@@ -365,7 +450,8 @@ export async function runPipeline(
       1,
       `${attributionEvents.length} event(s) logged`,
       traceTimings.attributionMs
-    )
+    ),
+    onProgress
   );
 
   const trace = buildTrace(
@@ -384,7 +470,8 @@ export async function runPipeline(
 
   const traceBuildMs = phase.lap();
 
-  steps.push(
+  await pushStep(
+    steps,
     makeStep(
       PIPELINE_STEP_IDS[9],
       PIPELINE_STEP_NAMES[9],
@@ -392,10 +479,11 @@ export async function runPipeline(
       1,
       `${trace.length} trace rows emitted`,
       traceBuildMs
-    )
+    ),
+    onProgress
   );
 
-  return finalize({
+  const result = finalize({
     prompt,
     impressionId,
     traceId,
@@ -414,13 +502,18 @@ export async function runPipeline(
       intent,
       promptSafety,
       winnerName: winner?.advertiser,
+      variance,
     }),
     receipt,
     attributionEvents,
     trace,
     intent,
     promptSafety,
+    variance,
   });
+
+  await onProgress?.({ type: "complete", result });
+  return result;
 }
 
 function suppressionSponsored(): SponsoredContent {
@@ -435,8 +528,15 @@ function suppressionSponsored(): SponsoredContent {
 }
 
 function finalize(
-  base: Omit<PipelineResult, "durationMs"> & { startedAt: number }
+  base: Omit<PipelineResult, "durationMs" | "runMeta"> & {
+    startedAt: number;
+    variance: import("@/lib/supply/runVariance").RunVariance;
+  }
 ): PipelineResult {
-  const { startedAt, ...rest } = base;
-  return { ...rest, durationMs: Date.now() - startedAt };
+  const { startedAt, variance, ...rest } = base;
+  return {
+    ...rest,
+    runMeta: buildRunMeta(variance),
+    durationMs: Date.now() - startedAt,
+  };
 }

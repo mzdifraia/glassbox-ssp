@@ -45,7 +45,7 @@ export function PipelinePanel({
         {visible.map((step, i) => (
           <li
             key={step.id}
-            className={`flex items-start justify-between gap-3 rounded-lg border px-3 py-2 text-sm transition-colors ${
+            className={`animate-step-enter flex items-start justify-between gap-3 rounded-lg border px-3 py-2 text-sm transition-colors ${
               i === activeIndex && loading
                 ? "border-cyan-600/50 bg-cyan-950/30"
                 : "border-zinc-800 bg-zinc-950/60"

@@ -222,7 +222,9 @@ overmind/                         policies + golden dataset
 
 ## Hackathon submission
 
-See [`SUBMISSION.md`](SUBMISSION.md) for links and a short walkthrough aligned with the [live walkthrough UI](https://glassbox-ssp.vercel.app?walkthrough=1).
+**Team:** Glass Half Blocked · **Project:** GlassBox SSP · **Track:** Sell-Side & Measurement
+
+See [`SUBMISSION.md`](SUBMISSION.md) for form copy-paste, [2-minute script](SUBMISSION.md#2-minute-demo-script), and [walkthrough UI](https://glassbox-ssp.vercel.app?walkthrough=1&fast=1).
 
 **One line:** GlassBox decides when a chat may show ads, which candidate wins under policy, why, and how to audit it.
 

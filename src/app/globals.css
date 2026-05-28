@@ -17,3 +17,17 @@ body {
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
+
+@keyframes pipeline-pulse {
+  0%,
+  100% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(200%);
+  }
+}
+
+.animate-pipeline-pulse {
+  animation: pipeline-pulse 1.2s ease-in-out infinite;
+}

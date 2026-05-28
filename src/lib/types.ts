@@ -158,6 +158,7 @@ export interface PipelineResult {
   intent: IntentResult;
   promptSafety: PromptSafetyResult;
   integrations: IntegrationStatus;
+  durationMs: number;
 }
 
 export interface RunPipelineOptions {

@@ -1,5 +1,7 @@
 # GlassBox SSP
 
+[![GitHub](https://img.shields.io/badge/GitHub-mzdifraia%2Fglassbox--ssp-181717?style=flat&logo=github)](https://github.com/mzdifraia/glassbox-ssp)
+
 GlassBox is a publisher-side trust and measurement layer for AI-native ads.
 
 It helps AI apps:
@@ -32,7 +34,7 @@ Safety is a hard gate before scoring. A high bid can never override policy.
 
 ```bash
 npm install
-cp .env.local.example .env.local   # add TAVILY_API_KEY=tvly-... on same line
+cp env.example .env.local   # add TAVILY_API_KEY=tvly-... on the same line as the variable name
 npm run dev
 ```
 

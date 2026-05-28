@@ -11,6 +11,8 @@ interface PipelinePanelProps {
   loading?: boolean;
   durationMs?: number;
   paced?: boolean;
+  panelSubtitle?: string;
+  highlight?: boolean;
 }
 
 const statusStyles: Record<string, string> = {
@@ -27,6 +29,8 @@ export function PipelinePanel({
   loading,
   durationMs,
   paced,
+  panelSubtitle,
+  highlight,
 }: PipelinePanelProps) {
   const visible = steps.slice(0, visibleCount);
   const activeIndex = loading ? visible.length - 1 : visible.length - 1;
@@ -46,10 +50,12 @@ export function PipelinePanel({
   return (
     <Panel
       title="Decision pipeline"
+      highlight={highlight}
       subtitle={
-        durationMs != null
+        panelSubtitle ??
+        (durationMs != null
           ? `Wall-clock ${(durationMs / 1000).toFixed(1)}s · step latencyMs from Date.now()`
-          : "10 gates · blocks are not score penalties"
+          : "10 gates · blocks are not score penalties")
       }
     >
       {(loading || visible.length > 0) && (

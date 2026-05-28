@@ -9,6 +9,8 @@ interface ChatThreadProps {
   assistantText: string;
   typingAssistant: boolean;
   result: PipelineResult | null;
+  panelSubtitle?: string;
+  highlight?: boolean;
 }
 
 export function ChatThread({
@@ -18,12 +20,23 @@ export function ChatThread({
   assistantText,
   typingAssistant,
   result,
+  panelSubtitle,
+  highlight,
 }: ChatThreadProps) {
   return (
-    <section className="rounded-xl border border-zinc-700/60 bg-zinc-900/80 p-4">
+    <section
+      className={`rounded-xl border p-4 transition-colors ${
+        highlight
+          ? "border-cyan-500/50 bg-cyan-950/20 ring-1 ring-cyan-500/20"
+          : "border-zinc-700/60 bg-zinc-900/80"
+      }`}
+    >
       <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-400">
         Conversation
       </h2>
+      {panelSubtitle && (
+        <p className="mt-0.5 font-mono text-[10px] text-zinc-500">{panelSubtitle}</p>
+      )}
       <div className="mt-3 space-y-3">
         {userPrompt && (
           <div className="flex justify-end">

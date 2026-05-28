@@ -6,6 +6,8 @@ import type { AdCandidate } from "@/lib/types";
 interface CandidateAuctionProps {
   candidates: AdCandidate[];
   message?: string;
+  panelSubtitle?: string;
+  highlight?: boolean;
 }
 
 const statusChip: Record<string, string> = {
@@ -18,16 +20,30 @@ const statusChip: Record<string, string> = {
 export function CandidateAuction({
   candidates,
   message,
+  panelSubtitle,
+  highlight,
 }: CandidateAuctionProps) {
   const sorted = sortCandidatesForDisplay(candidates);
   const winner = sorted.find((c) => c.status === "winner");
   const winnerBid = winner?.bidCents ?? 0;
 
   return (
-    <section className="rounded-xl border border-zinc-700/60 bg-zinc-900/80 p-4">
-      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-400">
+    <section
+      className={`rounded-xl border p-4 transition-colors ${
+        highlight
+          ? "border-cyan-500/50 bg-cyan-950/20 ring-1 ring-cyan-500/20"
+          : "border-zinc-700/60 bg-zinc-900/80"
+      }`}
+    >
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-400">
         Candidate auction
       </h2>
+      {panelSubtitle && (
+        <p className="mt-0.5 mb-3 font-mono text-[10px] text-zinc-500">
+          {panelSubtitle}
+        </p>
+      )}
+      {!panelSubtitle && <div className="mb-3" />}
       {message && (
         <p className="mb-3 rounded-lg border border-amber-800/50 bg-amber-950/30 px-3 py-2 text-sm text-amber-200">
           {message}

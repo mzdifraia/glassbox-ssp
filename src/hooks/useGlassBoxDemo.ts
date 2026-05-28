@@ -6,6 +6,12 @@ import {
 } from "@/data/demoPrompts";
 import { delayBeforeEvent } from "@/lib/demo/consumePacedStream";
 import { DEMO_PACE, sleep } from "@/lib/demo/demoPace";
+import {
+  buildDemoRunStatus,
+  scenarioFromRun,
+  type DemoRunPhase,
+  type DemoScenarioId,
+} from "@/lib/demo/demoRunState";
 import type {
   AttributionEvent,
   IntegrationStatus,
@@ -15,7 +21,9 @@ import type {
 import type { PipelineStreamEvent } from "@/lib/pipeline/streamEvents";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-export type DemoKind = "safe" | "vulnerable";
+import type { DemoKind } from "@/lib/demo/demoRunState";
+
+export type { DemoKind };
 
 export interface UseGlassBoxDemoOptions {
   /** Client-side delays between stream events (default true). Use ?fast=1 to disable. */
@@ -46,6 +54,13 @@ export function useGlassBoxDemo(options: UseGlassBoxDemoOptions = {}) {
   const [typingAssistant, setTypingAssistant] = useState(false);
   const [frozen, setFrozen] = useState(false);
   const [testSeed, setTestSeed] = useState("");
+  const [activeScenario, setActiveScenario] =
+    useState<DemoScenarioId>("idle");
+  const [currentStepId, setCurrentStepId] = useState<string | null>(null);
+  const [currentStepName, setCurrentStepName] = useState<string | null>(null);
+  const [currentStepDetail, setCurrentStepDetail] = useState<string | null>(
+    null
+  );
 
   const receiptRef = useRef<HTMLDivElement>(null);
   const auctionRef = useRef<HTMLDivElement>(null);
@@ -70,11 +85,16 @@ export function useGlassBoxDemo(options: UseGlassBoxDemoOptions = {}) {
       setTypingAssistant(false);
       setError(null);
       setBeatPause(null);
+      const scenario = scenarioFromRun(text, kind);
+      setActiveScenario(scenario);
       setActivePrompt(text);
       setPrompt(text);
       setResult(null);
       setLiveSteps([]);
       setLiveCandidates([]);
+      setCurrentStepId(null);
+      setCurrentStepName(null);
+      setCurrentStepDetail(null);
       setLiveStatus("Starting publisher policy pipeline…");
       setFocusLabel("Prompt safety gate");
       setFocusDetail("Evaluating prompt against publisher policy");
@@ -175,6 +195,10 @@ export function useGlassBoxDemo(options: UseGlassBoxDemoOptions = {}) {
         setLiveStatus(null);
         setFocusLabel(null);
         setFocusDetail(null);
+        setActiveScenario("idle");
+        setCurrentStepId(null);
+        setCurrentStepName(null);
+        setCurrentStepDetail(null);
       } finally {
         setLoading(false);
       }
@@ -190,6 +214,9 @@ export function useGlassBoxDemo(options: UseGlassBoxDemoOptions = {}) {
             setFocusDetail(null);
             break;
           case "step":
+            setCurrentStepId(event.step.id);
+            setCurrentStepName(event.step.name);
+            setCurrentStepDetail(event.step.reason);
             setLiveSteps((prev) => {
               const idx = prev.findIndex((s) => s.id === event.step.id);
               if (idx >= 0) {
@@ -204,6 +231,12 @@ export function useGlassBoxDemo(options: UseGlassBoxDemoOptions = {}) {
             setLiveStatus(null);
             break;
           case "candidates":
+            setCurrentStepId("candidates");
+            setCurrentStepName("Candidate auction");
+            setCurrentStepDetail(
+              event.message ??
+                `${event.candidates.length} candidates evaluated`
+            );
             setLiveCandidates(event.candidates);
             setFocusLabel("Candidate auction");
             setFocusDetail(
@@ -252,6 +285,10 @@ export function useGlassBoxDemo(options: UseGlassBoxDemoOptions = {}) {
     setFocusLabel(null);
     setFocusDetail(null);
     setBeatPause(null);
+    setActiveScenario("idle");
+    setCurrentStepId(null);
+    setCurrentStepName(null);
+    setCurrentStepDetail(null);
     setActivePrompt(null);
     setSafeSnapshot(null);
     setVulnSnapshot(null);
@@ -292,6 +329,26 @@ export function useGlassBoxDemo(options: UseGlassBoxDemoOptions = {}) {
       ? liveCandidates
       : result?.candidates ?? [];
 
+  const runPhase: DemoRunPhase = beatPause
+    ? "between"
+    : loading
+      ? "pipeline"
+      : typingAssistant
+        ? "typing"
+        : result
+          ? "settled"
+          : "idle";
+
+  const runStatus = buildDemoRunStatus({
+    activeScenario,
+    phase: runPhase,
+    stepId: currentStepId,
+    stepName: currentStepName,
+    stepDetail: currentStepDetail,
+    beatPause,
+    auctionSuppressed: result?.auctionSuppressed,
+  });
+
   return {
     prompt,
     setPrompt,
@@ -301,6 +358,8 @@ export function useGlassBoxDemo(options: UseGlassBoxDemoOptions = {}) {
     focusLabel,
     focusDetail,
     beatPause,
+    runStatus,
+    activeScenario,
     paced,
     stepsForPanel,
     candidatesForPanel,

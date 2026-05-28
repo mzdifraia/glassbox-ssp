@@ -10,8 +10,7 @@ import { DemoBar } from "@/components/DemoBar";
 import { IntegrationBadges } from "@/components/IntegrationBadges";
 import { TechnicalOverview } from "@/components/TechnicalOverview";
 import { PipelinePanel } from "@/components/PipelinePanel";
-import { BeatPauseBanner } from "@/components/BeatPauseBanner";
-import { FocusStrip } from "@/components/FocusStrip";
+import { DemoRunStatus } from "@/components/DemoRunStatus";
 import { PolicyBeat } from "@/components/PolicyBeat";
 import { PolicyMoment } from "@/components/PolicyMoment";
 import { TracePanel } from "@/components/TracePanel";
@@ -19,7 +18,29 @@ import { TransparencyReceipt } from "@/components/TransparencyReceipt";
 import { useGlassBoxDemo } from "@/hooks/useGlassBoxDemo";
 import { useTypewriter } from "@/hooks/useTypewriter";
 import { useSearchParams } from "next/navigation";
+import type { DemoRunStatusView } from "@/lib/demo/demoRunState";
 import { Suspense, useEffect } from "react";
+
+function panelSubtitle(
+  status: DemoRunStatusView,
+  panel: "chat" | "pipeline" | "auction" | "receipt"
+): string | undefined {
+  if (status.phase === "idle") return undefined;
+  const base = `Scenario ${status.scenarioShort} · ${status.phase}`;
+  if (status.phase !== "pipeline" && status.phase !== "settled") {
+    return base;
+  }
+  const map = {
+    chat: "chat",
+    pipeline: "pipeline",
+    auction: "auction",
+    receipt: "receipt",
+  };
+  if (status.watching.toLowerCase().includes(map[panel])) {
+    return `${base} · active panel`;
+  }
+  return `${base} · background`;
+}
 
 function HomeContent() {
   const searchParams = useSearchParams();
@@ -122,32 +143,18 @@ function HomeContent() {
           lastRunMs={demo.result?.durationMs}
         />
 
-        <BeatPauseBanner message={demo.beatPause} />
-
-        <FocusStrip
-          label={
-            demo.typingAssistant
-              ? "Assistant response"
-              : demo.focusLabel ?? demo.liveStatus ?? "Ready"
-          }
-          detail={
-            demo.typingAssistant
-              ? "Typing answer after policy pipeline"
-              : demo.focusDetail
-          }
-          visible={demo.loading || demo.typingAssistant}
-        />
-
         <DemoBar
           loading={demo.loading}
-          loadingLabel={demo.liveStatus ?? "Running pipeline…"}
           onSafe={demo.runSafe}
           onVulnerable={demo.runVulnerable}
           onFullStory={() => void demo.runFullStory()}
           onReset={demo.reset}
           storyComplete={demo.storyComplete}
           walkthrough={walkthrough}
+          activeScenario={demo.activeScenario}
         />
+
+        <DemoRunStatus status={demo.runStatus} />
 
         <CompareSummary safe={demo.safeSnapshot} vulnerable={demo.vulnSnapshot} />
 
@@ -194,6 +201,8 @@ function HomeContent() {
               assistantText={assistantDisplayed}
               typingAssistant={demo.typingAssistant}
               result={demo.result}
+              panelSubtitle={panelSubtitle(demo.runStatus, "chat")}
+              highlight={demo.runStatus.watching.includes("Chat")}
             />
             <PipelinePanel
               steps={demo.stepsForPanel}
@@ -201,6 +210,8 @@ function HomeContent() {
               loading={demo.loading}
               durationMs={demo.result?.durationMs}
               paced={demo.paced}
+              panelSubtitle={panelSubtitle(demo.runStatus, "pipeline")}
+              highlight={demo.runStatus.watching.includes("pipeline")}
             />
           </div>
 
@@ -212,6 +223,11 @@ function HomeContent() {
                 <CandidateAuction
                   candidates={demo.candidatesForPanel}
                   message={demo.result?.candidateMessage}
+                  panelSubtitle={panelSubtitle(demo.runStatus, "auction")}
+                  highlight={
+                    demo.runStatus.watching.includes("Auction") ||
+                    demo.runStatus.watching.includes("auction")
+                  }
                 />
               </div>
             )}
@@ -219,6 +235,8 @@ function HomeContent() {
               <TransparencyReceipt
                 receipt={demo.result?.receipt ?? null}
                 impressionId={demo.result?.impressionId}
+                panelSubtitle={panelSubtitle(demo.runStatus, "receipt")}
+                highlight={demo.runStatus.watching.includes("receipt")}
               />
             </div>
           </div>

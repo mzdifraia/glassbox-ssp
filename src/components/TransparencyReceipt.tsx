@@ -5,6 +5,8 @@ import type { TransparencyReceipt as ReceiptType } from "@/lib/types";
 interface TransparencyReceiptProps {
   receipt: ReceiptType | null;
   impressionId?: string;
+  panelSubtitle?: string;
+  highlight?: boolean;
 }
 
 function ListSection({
@@ -30,14 +32,22 @@ function ListSection({
 export function TransparencyReceipt({
   receipt,
   impressionId,
+  panelSubtitle,
+  highlight,
 }: TransparencyReceiptProps) {
   return (
-    <section className="rounded-xl border-2 border-cyan-800/40 bg-zinc-900/90 p-4 shadow-lg shadow-cyan-950/20">
+    <section
+      className={`rounded-xl border-2 p-4 shadow-lg transition-colors ${
+        highlight
+          ? "border-cyan-500/60 bg-cyan-950/25 shadow-cyan-950/30 ring-1 ring-cyan-500/25"
+          : "border-cyan-800/40 bg-zinc-900/90 shadow-cyan-950/20"
+      }`}
+    >
       <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide text-cyan-400">
         Transparency receipt
       </h2>
-      <p className="mb-4 text-[10px] text-zinc-500">
-        Structured audit fields · matches pipeline output
+      <p className="mb-4 font-mono text-[10px] text-zinc-500">
+        {panelSubtitle ?? "Structured audit fields · matches pipeline output"}
       </p>
       {!receipt ? (
         <p className="text-sm text-zinc-500">Receipt appears after pipeline run</p>

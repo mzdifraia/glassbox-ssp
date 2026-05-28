@@ -41,7 +41,9 @@ npm run dev
 
 Health check: `GET /api/health` after deploy.
 
-Open [http://localhost:3000](http://localhost:3000).
+**Live:** [https://glassbox-ssp.vercel.app](https://glassbox-ssp.vercel.app) · **Presenter:** [?presenter=1](https://glassbox-ssp.vercel.app?presenter=1)
+
+Local: [http://localhost:3000](http://localhost:3000) (`npm run dev`).
 
 **Presenter mode:** default UI hides debug toggles. Add `?debug=1` for NO_SAFE_ADS / API failure / test seed.
 

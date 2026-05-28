@@ -3,7 +3,9 @@
 ## Links
 
 - **Repo:** https://github.com/mzdifraia/glassbox-ssp
-- **Live demo:** _(add Vercel URL after deploy)_
+- **Live demo:** https://glassbox-ssp.vercel.app
+- **Presenter:** https://glassbox-ssp.vercel.app?presenter=1
+- **Health:** https://glassbox-ssp.vercel.app/api/health
 
 ## One-liner
 

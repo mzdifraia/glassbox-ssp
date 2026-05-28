@@ -304,6 +304,9 @@ export async function runPipeline(
     )
   );
 
+  // Drain gap between fetch and processCandidates (timed above) from later steps
+  phase.lap();
+
   const sponsored = buildSponsored(winner, intent);
   const sponsoredMs = phase.lap();
   const noSafeAds = !winner;

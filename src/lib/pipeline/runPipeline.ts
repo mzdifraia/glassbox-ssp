@@ -523,7 +523,7 @@ function suppressionSponsored(): SponsoredContent {
     headline: "",
     body: "",
     explanation:
-      "This is high commercial intent, but it is also vulnerability. The adtech incentive is to serve a debt product. GlassBox suppresses it.",
+      "Prompt flagged as financial distress — auction suppressed (policy PROMPT_VULNERABILITY_SUPPRESS). No ad request sent.",
   };
 }
 

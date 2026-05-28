@@ -41,11 +41,11 @@ npm run dev
 
 Health check: `GET /api/health` after deploy.
 
-**Live:** [https://glassbox-ssp.vercel.app](https://glassbox-ssp.vercel.app) · **Presenter:** [?presenter=1](https://glassbox-ssp.vercel.app?presenter=1)
+**Live:** [https://glassbox-ssp.vercel.app](https://glassbox-ssp.vercel.app) · **Walkthrough:** [?walkthrough=1](https://glassbox-ssp.vercel.app?walkthrough=1)
 
 Local: [http://localhost:3000](http://localhost:3000) (`npm run dev`).
 
-**Presenter mode:** default UI hides debug toggles. Add `?debug=1` for NO_SAFE_ADS / API failure / test seed.
+**Walkthrough layout** (`?walkthrough=1`): wider panels, run-both button. Add `?debug=1` for edge-case toggles.
 
 ## Testing & auction variance
 
@@ -53,7 +53,7 @@ Policy gates (vulnerability, unsupported claims, category blocks) are **rule-bas
 
 | Mode | How | Use when |
 |------|-----|----------|
-| **Live** | No `seed` in request | Demos, judges — winner/bids can change each run |
+| **Live** | No `seed` in request | Winner/bids can change each run |
 | **Seeded** | `seed: "golden-safe"` in API body or `?seed=golden-safe` | Reproducible tests & bug reports |
 | **Frozen** | `frozen: true` or `?frozen=1` | Rehearsal with pinned bids (Ledgerly baseline) |
 
@@ -99,15 +99,10 @@ Copy `.env.local.example` to `.env.local` and fill in keys as needed.
 
 ## Demo script
 
-1. **Opening line:** “Everyone can insert an ad into a chat. GlassBox decides whether an ad should appear, which one earns the placement, why it won, and how the whole decision can be audited.”
-
-2. Click **Run safe commercial prompt** — a safe accounting advertiser wins (varies live); HyperBooks always blocked for unsupported claim; transparency receipt shows full audit trail.
-
-3. **Vulnerability beat:** “Now here’s the dangerous case. This is high commercial intent, but it is also vulnerability.”
-
-4. Click **Run vulnerable prompt** — auction suppressed before ad request; receipt shows suppression only.
-
-5. **Close:** “We think AI-native ads need to optimise for trust before revenue. GlassBox is the sell-side trust and measurement layer that makes that possible.”
+1. Show **System** panel (pipeline step IDs, APIs, Tavily mode).
+2. Run **Commercial (A)** — walk through gates; point at HyperBooks block in auction.
+3. Run **Distress (B)** — show `PROMPT_VULNERABILITY_SUPPRESS` and no ad request in receipt.
+4. Export trace JSON for Overmind eval.
 
 ## Demo paths
 

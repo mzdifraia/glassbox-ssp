@@ -26,7 +26,7 @@ export function CompareSummary({ safe, vulnerable }: CompareSummaryProps) {
         </h2>
         {storyComplete && (
           <span className="rounded-full border border-emerald-600/40 bg-emerald-950/40 px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-emerald-300">
-            Full story complete
+            A + B complete
           </span>
         )}
       </div>
@@ -101,10 +101,8 @@ export function CompareSummary({ safe, vulnerable }: CompareSummaryProps) {
       </div>
 
       {storyComplete && (
-        <p className="mt-4 text-center text-sm text-zinc-400">
-          Same publisher stack —{" "}
-          <span className="text-cyan-300">monetise when safe</span>,{" "}
-          <span className="text-amber-300">suppress when vulnerable</span>.
+        <p className="mt-4 text-center font-mono text-xs text-zinc-500">
+          Same pipeline · scenario A fetched ads · scenario B exited at prompt-safety
         </p>
       )}
     </section>

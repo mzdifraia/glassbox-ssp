@@ -8,6 +8,7 @@ import { CompareSummary } from "@/components/CompareSummary";
 import { RunContextBar } from "@/components/RunContextBar";
 import { DemoBar } from "@/components/DemoBar";
 import { IntegrationBadges } from "@/components/IntegrationBadges";
+import { TechnicalOverview } from "@/components/TechnicalOverview";
 import { PipelinePanel } from "@/components/PipelinePanel";
 import { BeatPauseBanner } from "@/components/BeatPauseBanner";
 import { FocusStrip } from "@/components/FocusStrip";
@@ -23,7 +24,9 @@ import { Suspense, useEffect } from "react";
 function HomeContent() {
   const searchParams = useSearchParams();
   const debug = searchParams.get("debug") === "1";
-  const presenter = searchParams.get("presenter") === "1";
+  const walkthrough =
+    searchParams.get("walkthrough") === "1" ||
+    searchParams.get("presenter") === "1";
   const frozenFromUrl =
     searchParams.get("frozen") === "1" ||
     searchParams.get("deterministic") === "1";
@@ -90,9 +93,9 @@ function HomeContent() {
                 Live
               </a>
             </div>
-            {!presenter && (
+            {!walkthrough && (
               <p className="mt-1 max-w-xl text-sm text-zinc-500">
-                Publisher trust layer for AI-native ads
+                Next.js · TypeScript · streaming pipeline API
               </p>
             )}
           </div>
@@ -112,7 +115,12 @@ function HomeContent() {
           </div>
         )}
 
-        <PolicyBeat compact={presenter} />
+        <PolicyBeat compact={walkthrough} />
+
+        <TechnicalOverview
+          status={demo.result?.integrations ?? demo.integrationStatus}
+          lastRunMs={demo.result?.durationMs}
+        />
 
         <BeatPauseBanner message={demo.beatPause} />
 
@@ -138,7 +146,7 @@ function HomeContent() {
           onFullStory={() => void demo.runFullStory()}
           onReset={demo.reset}
           storyComplete={demo.storyComplete}
-          presenter={presenter}
+          walkthrough={walkthrough}
         />
 
         <CompareSummary safe={demo.safeSnapshot} vulnerable={demo.vulnSnapshot} />
@@ -150,10 +158,10 @@ function HomeContent() {
           typingAssistant={demo.typingAssistant}
         />
 
-        {!presenter && <RunContextBar result={demo.result} />}
+        {demo.result && <RunContextBar result={demo.result} />}
 
         <div className="grid gap-4 lg:grid-cols-12">
-          {!presenter && (
+          {!walkthrough && (
             <div className="lg:col-span-3">
               <ChatPanel
                 prompt={demo.prompt}
@@ -177,7 +185,7 @@ function HomeContent() {
           )}
 
           <div
-            className={`flex flex-col gap-4 ${presenter ? "lg:col-span-6" : "lg:col-span-4"}`}
+            className={`flex flex-col gap-4 ${walkthrough ? "lg:col-span-6" : "lg:col-span-4"}`}
           >
             <ChatThread
               userPrompt={demo.activePrompt}
@@ -197,7 +205,7 @@ function HomeContent() {
           </div>
 
           <div
-            className={`flex flex-col gap-4 ${presenter ? "lg:col-span-6" : "lg:col-span-5"}`}
+            className={`flex flex-col gap-4 ${walkthrough ? "lg:col-span-6" : "lg:col-span-5"}`}
           >
             {(demo.candidatesForPanel.length > 0 || !demo.loading) && (
               <div ref={demo.auctionRef}>
@@ -216,7 +224,7 @@ function HomeContent() {
           </div>
         </div>
 
-        {!presenter && (
+        {!walkthrough && (
           <div className="grid gap-4 lg:grid-cols-2">
             <AttributionLog
               events={demo.allEvents}
@@ -235,7 +243,7 @@ function HomeContent() {
           </div>
         )}
 
-        {presenter && demo.result && (
+        {walkthrough && demo.result && (
           <div className="flex justify-center pb-6">
             <TracePanel result={demo.result} />
           </div>

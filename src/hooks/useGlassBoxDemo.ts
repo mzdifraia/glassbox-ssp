@@ -233,7 +233,7 @@ export function useGlassBoxDemo(options: UseGlassBoxDemoOptions = {}) {
     for (let s = steps; s > 0; s--) {
       setBeatPause(
         paced
-          ? `Pause — review the policy spotlight and auction. Step 2 (vulnerable) in ${s}s…`
+          ? `Commercial run finished. Distress scenario (B) starts in ${s}s…`
           : null
       );
       await sleep(paced ? 1000 : pauseMs);

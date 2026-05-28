@@ -3,11 +3,11 @@ import type { AssistantMessage, IntentResult, PromptSafetyResult } from "@/lib/t
 
 const ACCOUNTING_OPENERS = [
   (team: string) =>
-    `For ${team} evaluating accounting software, prioritise multi-user access, bank feeds, audit trails, and reporting that scales with headcount.`,
+    `For ${team}, I'd compare bank feeds, role-based approvals, and audit trails before you pick a vendor.`,
   (team: string) =>
-    `When ${team} is shortlisting accounting tools, weigh close speed, bank reconciliation, role-based approvals, and how reporting holds up as you hire.`,
+    `If ${team} is shopping for accounting tools, reconciliation speed and multi-user access matter more than feature count.`,
   (team: string) =>
-    `${team} comparing accounting platforms should sanity-check integrations, audit trails, and whether multi-entity support is needed before you buy.`,
+    `${team} should confirm reporting still works as headcount grows — that's usually where cheap tools break.`,
 ] as const;
 
 export function buildAssistantMessage(
@@ -27,7 +27,7 @@ export function buildAssistantMessage(
   if (apiFailure) {
     return {
       role: "assistant",
-      content: `I can help you think through: "${truncate(prompt, 100)}". Sponsored placements are temporarily unavailable, so this answer is unbiased.`,
+      content: `Ads are offline right now, so this is unsponsored. Your question was: "${truncate(prompt, 100)}"`,
       hasSponsored: false,
     };
   }
@@ -36,7 +36,7 @@ export function buildAssistantMessage(
     return {
       role: "assistant",
       content:
-        "I understand you're under real financial pressure. I won't show sponsored financial products here — that wouldn't be appropriate. Consider a nonprofit credit counselor (NFCC), a trusted advisor, or official consumer finance guidance while you work through next steps.",
+        "This looks like financial distress, so we are not running an ad auction. If you need help, NFCC (nfcc.org) lists nonprofit credit counselors; your bank or a licensed advisor may also be useful.",
       hasSponsored: false,
     };
   }
@@ -48,7 +48,7 @@ export function buildAssistantMessage(
       : ACCOUNTING_OPENERS[0](team);
     return {
       role: "assistant",
-      content: `${opener} Below is one sponsored option that cleared our safety and transparency checks${winnerName ? ` (${winnerName})` : ""}.`,
+      content: `${opener} Sponsored (passed policy)${winnerName ? `: ${winnerName}` : ""}.`,
       hasSponsored: true,
     };
   }
@@ -56,7 +56,7 @@ export function buildAssistantMessage(
   if (hasSponsored) {
     return {
       role: "assistant",
-      content: `Based on your question about ${intent.intent.replace(/\./g, " ")}, here is a sponsored suggestion that passed policy review${winnerName ? ` from ${winnerName}` : ""}.`,
+      content: `Sponsored option for ${intent.intent.replace(/\./g, " ")}${winnerName ? ` — ${winnerName}` : ""}. It cleared the same gates as everything else in the auction.`,
       hasSponsored: true,
     };
   }
@@ -64,7 +64,7 @@ export function buildAssistantMessage(
   return {
     role: "assistant",
     content:
-      "I couldn't find a sponsored placement that passed all safety and relevance checks for this prompt. Here's an unbiased answer based on what you asked.",
+      "Nothing in the auction passed safety and relevance checks, so there is no sponsored slot in this reply.",
     hasSponsored: false,
   };
 }
@@ -72,7 +72,7 @@ export function buildAssistantMessage(
 function extractTeamHint(prompt: string): string {
   const match = prompt.match(/(\d+)[- ]?person/i);
   if (match) return `a ${match[1]}-person team`;
-  if (/startup/i.test(prompt)) return "a small startup";
+  if (/startup/i.test(prompt)) return "your startup";
   return "your team";
 }
 

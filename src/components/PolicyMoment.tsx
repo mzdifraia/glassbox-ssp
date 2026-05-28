@@ -31,7 +31,7 @@ function MomentCard({ moment }: { moment: PolicyMoment }) {
           isPolicy ? "text-amber-300" : "text-amber-200"
         }`}
       >
-        {isPolicy ? "Trust before revenue" : "Vulnerability beat"}
+        {isPolicy ? "Policy block" : "Suppression"}
       </p>
       <h3 className="mt-1 text-lg font-semibold text-zinc-50">
         {moment.headline}

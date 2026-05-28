@@ -4,7 +4,7 @@
 
 - **Repo:** https://github.com/mzdifraia/glassbox-ssp
 - **Live demo:** https://glassbox-ssp.vercel.app
-- **Presenter:** https://glassbox-ssp.vercel.app?presenter=1
+- **Walkthrough layout:** https://glassbox-ssp.vercel.app?walkthrough=1
 - **Health:** https://glassbox-ssp.vercel.app/api/health
 
 ## One-liner
@@ -21,20 +21,18 @@ Sell-Side & Measurement
 - **Cursor** — built with Cursor
 - **Tavily** — hybrid claim grounding (policy hard-block + live search)
 - **Overmind OSS** — trace export, `overmind/policies.md`, `overmind/dataset.json`
-- **Stub supply** for the hackathon demo (Thrad `AdProvider` adapter in repo for **post-hack GTM**, not required to judge)
+- **Stub supply** for demo (Thrad `AdProvider` in repo for post-hack GTM)
 
-## What to watch (90s)
+## What to watch
 
-Open **presenter mode** and hit **Run full story** (paced ~90s — pipeline steps land one at a time):
+https://glassbox-ssp.vercel.app?walkthrough=1 — **Run both scenarios**
 
-https://glassbox-ssp.vercel.app?presenter=1
+1. **Commercial (A)** — auction runs; HyperBooks blocked on claims
+2. **Distress (B)** — `PROMPT_VULNERABILITY_SUPPRESS`, no ad request
+3. **System panel** — pipeline IDs, API routes, integration modes
+4. **Receipt + trace JSON** export
 
-Developers: add `?fast=1` to skip client pacing.
-
-1. **Safe commercial** — spotlight: *Higher bid did not win* (HyperBooks blocked)
-2. **Vulnerable** — spotlight: *Auction suppressed before any ad request*
-3. **Compare panel** — Served vs Suppressed side-by-side
-4. **Transparency receipt** + **Export trace JSON** (Overmind-ready)
+`?fast=1` skips UI pacing. `?debug=1` shows edge-case toggles.
 
 ## Key principle
 

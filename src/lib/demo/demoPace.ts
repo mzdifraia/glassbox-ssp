@@ -1,4 +1,4 @@
-/** Client-side pacing so judges can follow the pipeline (server stays full speed). */
+/** Client-side pacing between stream events (server stays full speed). */
 export const DEMO_PACE = {
   msBetweenSteps: 1100,
   msOnStatus: 700,

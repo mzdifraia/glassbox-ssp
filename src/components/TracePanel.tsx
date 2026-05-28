@@ -34,7 +34,7 @@ export function TracePanel({ result }: TracePanelProps) {
         )}
       </div>
       <p className="mb-3 text-[10px] text-zinc-500">
-        Open-source Overmind eval: export traces + see{" "}
+        Export JSON for Overmind eval · policies at{" "}
         <code className="text-zinc-400">overmind/policies.md</code> and{" "}
         <code className="text-zinc-400">overmind/dataset.json</code>
         {traceId ? (

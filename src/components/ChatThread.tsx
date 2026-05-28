@@ -50,7 +50,7 @@ export function ChatThread({
                   )}
                 </p>
               ) : loading ? (
-                <p className="text-zinc-500">GlassBox is evaluating…</p>
+                <p className="text-zinc-500">Pipeline running…</p>
               ) : null}
 
               {result?.sponsored.served && result.sponsored.body && !typingAssistant && (
@@ -75,7 +75,7 @@ export function ChatThread({
 
         {!userPrompt && (
           <p className="text-sm text-zinc-500">
-            Run a policy test case to start the conversation.
+            Pick a scenario to run the pipeline.
           </p>
         )}
       </div>

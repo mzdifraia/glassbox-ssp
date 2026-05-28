@@ -17,7 +17,7 @@ export function detectPolicyMoment(
     return {
       id: "suppression",
       tone: "suppression",
-      headline: "Auction suppressed before any ad request",
+      headline: "PROMPT_VULNERABILITY_SUPPRESS",
       detail: result.promptSafety.reason,
       metric: "Ad request: No",
     };
@@ -34,8 +34,8 @@ export function detectPolicyMoment(
     return {
       id: "hyperbooks",
       tone: "policy-win",
-      headline: "Higher bid did not win",
-      detail: `HyperBooks bid $${(hyper.bidCents / 100).toFixed(2)} — blocked by unsupported claim policy, not auction score.`,
+      headline: "Higher bid blocked (CANDIDATE_UNSUPPORTED_CLAIM)",
+      detail: `HyperBooks bid $${(hyper.bidCents / 100).toFixed(2)} vs winner $${(winner.bidCents / 100).toFixed(2)} — claim gate fired before scoring.`,
       metric: `Winner: ${winner.advertiser} at $${(winner.bidCents / 100).toFixed(2)}`,
     };
   }

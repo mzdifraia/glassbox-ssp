@@ -37,7 +37,7 @@ export function TransparencyReceipt({
         Transparency receipt
       </h2>
       <p className="mb-4 text-[10px] text-zinc-500">
-        The most important UI — every placement explained
+        Structured audit fields · matches pipeline output
       </p>
       {!receipt ? (
         <p className="text-sm text-zinc-500">Receipt appears after pipeline run</p>

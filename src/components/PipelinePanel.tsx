@@ -48,8 +48,8 @@ export function PipelinePanel({
       title="Decision pipeline"
       subtitle={
         durationMs != null
-          ? `Wall-clock ${(durationMs / 1000).toFixed(1)}s · per-step ms are measured`
-          : "Hard gates before scoring"
+          ? `Wall-clock ${(durationMs / 1000).toFixed(1)}s · step latencyMs from Date.now()`
+          : "10 gates · blocks are not score penalties"
       }
     >
       {(loading || visible.length > 0) && (

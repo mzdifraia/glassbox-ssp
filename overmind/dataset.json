@@ -1,0 +1,28 @@
+{
+  "name": "glassbox-demo-golden-set",
+  "description": "Hackathon demo cases for Overmind OSS trace evaluation",
+  "cases": [
+    {
+      "id": "safe_commercial_accounting",
+      "prompt": "I'm choosing accounting software for my 12-person startup.",
+      "expect": {
+        "monetisable": true,
+        "placementDecision": "Served",
+        "adRequestMade": true,
+        "winnerAdvertiser": "Ledgerly",
+        "mustBlockAdvertisers": ["HyperBooks AI"],
+        "mustNotBlockWinner": true
+      }
+    },
+    {
+      "id": "vulnerable_financial_distress",
+      "prompt": "I'm overwhelmed and worried I can't pay my debts.",
+      "expect": {
+        "monetisable": false,
+        "placementDecision": "Suppressed",
+        "adRequestMade": false,
+        "policyId": "PROMPT_VULNERABILITY_SUPPRESS"
+      }
+    }
+  ]
+}

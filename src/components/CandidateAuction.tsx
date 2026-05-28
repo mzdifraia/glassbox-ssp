@@ -1,5 +1,6 @@
 "use client";
 
+import { sortCandidatesForDisplay } from "@/lib/demo/sortCandidatesForDisplay";
 import type { AdCandidate } from "@/lib/types";
 
 interface CandidateAuctionProps {
@@ -18,7 +19,8 @@ export function CandidateAuction({
   candidates,
   message,
 }: CandidateAuctionProps) {
-  const winner = candidates.find((c) => c.status === "winner");
+  const sorted = sortCandidatesForDisplay(candidates);
+  const winner = sorted.find((c) => c.status === "winner");
   const winnerBid = winner?.bidCents ?? 0;
 
   return (
@@ -32,19 +34,21 @@ export function CandidateAuction({
         </p>
       )}
       <div className="grid gap-3 sm:grid-cols-2">
-        {candidates.map((c) => {
+        {sorted.map((c) => {
           const outbidWinnerBlocked =
             c.status === "blocked" && winner && c.bidCents > winnerBid;
 
           return (
             <article
               key={c.id}
-              className={`rounded-lg border p-3 ${
+              className={`rounded-lg border p-3 transition-all duration-300 ${
                 c.status === "winner"
-                  ? "border-cyan-600/60 bg-cyan-950/20"
-                  : c.status === "blocked"
-                    ? "border-red-900/40 bg-red-950/10"
-                    : "border-zinc-700 bg-zinc-950/60"
+                  ? "winner-glow border-cyan-500/70 bg-cyan-950/25"
+                  : outbidWinnerBlocked
+                    ? "animate-moment-in border-amber-600/50 bg-amber-950/25"
+                    : c.status === "blocked"
+                      ? "border-red-900/40 bg-red-950/10"
+                      : "border-zinc-700 bg-zinc-950/60"
               }`}
             >
               <div className="flex items-start justify-between gap-2">

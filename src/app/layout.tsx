@@ -13,9 +13,17 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "GlassBox SSP",
+  title: "GlassBox SSP — Publisher trust layer for AI ads",
   description:
-    "Publisher-side trust and measurement layer for AI-native ads",
+    "Decide when chat may be monetised, block unsafe ads before scoring, and ship transparency receipts judges can audit.",
+  openGraph: {
+    title: "GlassBox SSP",
+    description:
+      "Trust before revenue — policy gates, live auction, transparency receipts.",
+    url: "https://glassbox-ssp.vercel.app",
+    siteName: "GlassBox SSP",
+    type: "website",
+  },
 };
 
 export default function RootLayout({

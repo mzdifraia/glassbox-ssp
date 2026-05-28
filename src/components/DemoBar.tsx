@@ -3,31 +3,52 @@
 interface DemoBarProps {
   onSafe: () => void;
   onVulnerable: () => void;
+  onFullStory?: () => void;
   onReset: () => void;
   loading: boolean;
   loadingLabel?: string;
+  storyComplete?: boolean;
+  presenter?: boolean;
 }
 
 export function DemoBar({
   onSafe,
   onVulnerable,
+  onFullStory,
   onReset,
   loading,
   loadingLabel,
+  storyComplete,
+  presenter,
 }: DemoBarProps) {
   return (
     <section className="rounded-xl border border-cyan-800/40 bg-gradient-to-r from-cyan-950/40 to-zinc-900/80 p-4 shadow-lg shadow-cyan-950/20">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-xs font-semibold uppercase tracking-wider text-cyan-400">
-          Policy test cases
+          {presenter ? "90-second judge path" : "Policy test cases"}
         </h2>
         {loading && (
           <span className="text-[10px] text-cyan-300/80 animate-pulse">
             {loadingLabel ?? "Running pipeline…"}
           </span>
         )}
+        {storyComplete && !loading && (
+          <span className="text-[10px] text-emerald-400/90">✓ Both beats recorded</span>
+        )}
       </div>
-      <div className="mt-3 grid gap-3 sm:grid-cols-3">
+      {presenter && onFullStory && (
+        <button
+          type="button"
+          disabled={loading}
+          onClick={onFullStory}
+          className="mt-3 w-full rounded-lg bg-gradient-to-r from-cyan-600 to-cyan-500 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-cyan-900/40 transition hover:from-cyan-500 hover:to-cyan-400 disabled:opacity-50"
+        >
+          ▶ Run full story (safe → vulnerable)
+        </button>
+      )}
+      <div
+        className={`grid gap-3 sm:grid-cols-3 ${presenter && onFullStory ? "mt-3" : "mt-3"}`}
+      >
         <button
           type="button"
           disabled={loading}

@@ -25,10 +25,14 @@ Sell-Side & Measurement
 
 ## What to watch (90s)
 
-1. **Step 1 · Safe commercial** — safe advertiser wins (varies live); HyperBooks higher bid **blocked by policy**
-2. **Step 2 · Vulnerable** — auction suppressed **before** ad request
-3. **Transparency receipt** — full audit trail
-4. **Export trace JSON** — Overmind-ready
+Open **presenter mode** and hit **Run full story**:
+
+https://glassbox-ssp.vercel.app?presenter=1
+
+1. **Safe commercial** — spotlight: *Higher bid did not win* (HyperBooks blocked)
+2. **Vulnerable** — spotlight: *Auction suppressed before any ad request*
+3. **Compare panel** — Served vs Suppressed side-by-side
+4. **Transparency receipt** + **Export trace JSON** (Overmind-ready)
 
 ## Key principle
 

@@ -46,3 +46,61 @@ body {
 .animate-step-enter {
   animation: step-enter 0.28s ease-out both;
 }
+
+@keyframes moment-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-moment-in {
+  animation: moment-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes receipt-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-receipt-in {
+  animation: receipt-in 0.5s ease-out both;
+}
+
+@keyframes story-complete {
+  from {
+    box-shadow: 0 0 0 0 rgba(34, 211, 238, 0);
+  }
+  to {
+    box-shadow: 0 0 40px 0 rgba(34, 211, 238, 0.12);
+  }
+}
+
+.animate-story-complete {
+  animation: story-complete 0.8s ease-out both;
+}
+
+.policy-beat {
+  background: linear-gradient(
+    135deg,
+    rgba(9, 9, 11, 0.95) 0%,
+    rgba(8, 51, 68, 0.15) 50%,
+    rgba(9, 9, 11, 0.95) 100%
+  );
+}
+
+.winner-glow {
+  box-shadow:
+    0 0 0 1px rgba(34, 211, 238, 0.35),
+    0 0 24px rgba(34, 211, 238, 0.15);
+}

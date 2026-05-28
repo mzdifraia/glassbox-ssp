@@ -189,6 +189,12 @@ export function useGlassBoxDemo() {
     [forceNoSafeAds, frozen, scrollToHighlight, simulateApiFailure, testSeed]
   );
 
+  const runFullStory = useCallback(async () => {
+    await runPipeline(SAFE_COMMERCIAL_PROMPT, "safe");
+    await new Promise((r) => setTimeout(r, 600));
+    await runPipeline(VULNERABLE_PROMPT, "vulnerable");
+  }, [runPipeline]);
+
   const reset = useCallback(() => {
     setPrompt("");
     setResult(null);
@@ -266,5 +272,7 @@ export function useGlassBoxDemo() {
     allEvents,
     runSafe: () => void runPipeline(SAFE_COMMERCIAL_PROMPT, "safe"),
     runVulnerable: () => void runPipeline(VULNERABLE_PROMPT, "vulnerable"),
+    runFullStory,
+    storyComplete: Boolean(safeSnapshot && vulnSnapshot),
   };
 }

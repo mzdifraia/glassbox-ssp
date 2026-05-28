@@ -1,6 +1,7 @@
 "use client";
 
 import { Panel } from "@/components/ui/Panel";
+import { PIPELINE_STEP_NAMES } from "@/lib/pipeline/constants";
 import type { PipelineStep } from "@/lib/types";
 
 interface PipelinePanelProps {
@@ -26,6 +27,11 @@ export function PipelinePanel({
 }: PipelinePanelProps) {
   const visible = steps.slice(0, visibleCount);
   const activeIndex = loading ? visibleCount : visibleCount - 1;
+  const totalSteps = PIPELINE_STEP_NAMES.length;
+  const progressPct = Math.min(
+    100,
+    Math.round((visible.length / totalSteps) * 100)
+  );
 
   return (
     <Panel
@@ -36,9 +42,20 @@ export function PipelinePanel({
           : "Hard gates before scoring"
       }
     >
-      {loading && (
-        <div className="mb-3 h-1 overflow-hidden rounded-full bg-zinc-800">
-          <div className="h-full w-1/3 animate-pipeline-pulse rounded-full bg-cyan-500" />
+      {(loading || visible.length > 0) && (
+        <div className="mb-3">
+          <div className="mb-1 flex justify-between text-[10px] text-zinc-500">
+            <span>Pipeline progress</span>
+            <span>
+              {visible.length}/{totalSteps} gates
+            </span>
+          </div>
+          <div className="h-1.5 overflow-hidden rounded-full bg-zinc-800">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-cyan-600 to-cyan-400 transition-all duration-500"
+              style={{ width: `${loading ? Math.max(progressPct, 8) : progressPct}%` }}
+            />
+          </div>
         </div>
       )}
       <ol className="space-y-2">

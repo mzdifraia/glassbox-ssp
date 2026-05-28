@@ -42,20 +42,28 @@ export function TransparencyReceipt({
       {!receipt ? (
         <p className="text-sm text-zinc-500">Receipt appears after pipeline run</p>
       ) : (
-        <div className="space-y-4 text-sm">
+        <div className="animate-receipt-in space-y-4 text-sm">
+          <div
+            className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 ${
+              receipt.placementDecision === "Served"
+                ? "border-emerald-600/40 bg-emerald-950/30"
+                : "border-amber-600/40 bg-amber-950/30"
+            }`}
+          >
+            <span
+              className={`text-lg font-bold tracking-tight ${
+                receipt.placementDecision === "Served"
+                  ? "text-emerald-400"
+                  : "text-amber-300"
+              }`}
+            >
+              {receipt.placementDecision}
+            </span>
+            <span className="text-[10px] uppercase text-zinc-500">
+              placement decision
+            </span>
+          </div>
           <div className="grid gap-2 sm:grid-cols-2">
-            <div>
-              <span className="text-zinc-500">Placement decision</span>
-              <p
-                className={`font-semibold ${
-                  receipt.placementDecision === "Served"
-                    ? "text-emerald-400"
-                    : "text-amber-400"
-                }`}
-              >
-                {receipt.placementDecision}
-              </p>
-            </div>
             <div>
               <span className="text-zinc-500">Intent</span>
               <p className="font-mono text-zinc-200">{receipt.intent}</p>

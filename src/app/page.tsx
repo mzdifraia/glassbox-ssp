@@ -9,6 +9,8 @@ import { RunContextBar } from "@/components/RunContextBar";
 import { DemoBar } from "@/components/DemoBar";
 import { IntegrationBadges } from "@/components/IntegrationBadges";
 import { PipelinePanel } from "@/components/PipelinePanel";
+import { PolicyBeat } from "@/components/PolicyBeat";
+import { PolicyMoment } from "@/components/PolicyMoment";
 import { TracePanel } from "@/components/TracePanel";
 import { TransparencyReceipt } from "@/components/TransparencyReceipt";
 import { useGlassBoxDemo } from "@/hooks/useGlassBoxDemo";
@@ -57,8 +59,13 @@ function HomeContent() {
   ]);
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100">
-      <header className="border-b border-zinc-800 bg-zinc-900/50 px-6 py-4 backdrop-blur">
+    <div className="relative min-h-screen bg-zinc-950 text-zinc-100">
+      <div
+        className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_70%_50%_at_50%_-10%,rgba(34,211,238,0.08),transparent_55%)]"
+        aria-hidden
+      />
+
+      <header className="relative border-b border-zinc-800/80 bg-zinc-950/80 px-6 py-4 backdrop-blur-md">
         <div className="mx-auto flex max-w-[1600px] flex-wrap items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-3">
@@ -71,12 +78,20 @@ function HomeContent() {
               >
                 GitHub
               </a>
+              <a
+                href="https://glassbox-ssp.vercel.app/api/health"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded border border-emerald-800/50 px-2 py-0.5 text-[10px] text-emerald-500/90 hover:text-emerald-300"
+              >
+                Live
+              </a>
             </div>
-            <p className="mt-1 max-w-xl text-sm text-zinc-400">
-              Policy gates are rule-based. Auction variance is live by default; use a{" "}
-              <code className="text-cyan-400/90">seed</code> for reproducible tests (
-              <code className="text-cyan-400/90">npm test</code>).
-            </p>
+            {!presenter && (
+              <p className="mt-1 max-w-xl text-sm text-zinc-500">
+                Publisher trust layer for AI-native ads
+              </p>
+            )}
           </div>
           <IntegrationBadges
             status={demo.result?.integrations ?? demo.integrationStatus}
@@ -84,7 +99,7 @@ function HomeContent() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-[1600px] space-y-4 p-4">
+      <main className="relative mx-auto max-w-[1600px] space-y-4 p-4">
         {demo.error && (
           <div
             role="alert"
@@ -94,17 +109,24 @@ function HomeContent() {
           </div>
         )}
 
+        <PolicyBeat compact={presenter} />
+
         <DemoBar
           loading={demo.loading}
           loadingLabel={demo.liveStatus ?? "Running pipeline…"}
           onSafe={demo.runSafe}
           onVulnerable={demo.runVulnerable}
+          onFullStory={() => void demo.runFullStory()}
           onReset={demo.reset}
+          storyComplete={demo.storyComplete}
+          presenter={presenter}
         />
 
         <CompareSummary safe={demo.safeSnapshot} vulnerable={demo.vulnSnapshot} />
 
-        <RunContextBar result={demo.result} />
+        <PolicyMoment result={demo.result} loading={demo.loading} />
+
+        {!presenter && <RunContextBar result={demo.result} />}
 
         <div className="grid gap-4 lg:grid-cols-12">
           {!presenter && (
@@ -131,7 +153,7 @@ function HomeContent() {
           )}
 
           <div
-            className={`flex flex-col gap-4 ${presenter ? "lg:col-span-5" : "lg:col-span-4"}`}
+            className={`flex flex-col gap-4 ${presenter ? "lg:col-span-6" : "lg:col-span-4"}`}
           >
             <ChatThread
               userPrompt={demo.activePrompt}
@@ -149,7 +171,9 @@ function HomeContent() {
             />
           </div>
 
-          <div className={`flex flex-col gap-4 ${presenter ? "lg:col-span-4" : "lg:col-span-5"}`}>
+          <div
+            className={`flex flex-col gap-4 ${presenter ? "lg:col-span-6" : "lg:col-span-5"}`}
+          >
             <div ref={demo.auctionRef}>
               <CandidateAuction
                 candidates={demo.candidatesForPanel}
@@ -180,6 +204,12 @@ function HomeContent() {
                 demo.addEvent("conversion_recorded", "Conversion pixel fired")
               }
             />
+            <TracePanel result={demo.result} />
+          </div>
+        )}
+
+        {presenter && demo.result && (
+          <div className="flex justify-center pb-6">
             <TracePanel result={demo.result} />
           </div>
         )}

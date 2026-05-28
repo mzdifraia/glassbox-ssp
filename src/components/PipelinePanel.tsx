@@ -32,7 +32,7 @@ export function PipelinePanel({
       title="Decision pipeline"
       subtitle={
         durationMs != null
-          ? `Last run ${(durationMs / 1000).toFixed(1)}s`
+          ? `Wall-clock ${(durationMs / 1000).toFixed(1)}s · per-step ms are measured`
           : "Hard gates before scoring"
       }
     >

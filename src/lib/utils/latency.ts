@@ -1,5 +1,14 @@
-export function mockLatency(): number {
-  return 40 + Math.floor(Math.random() * 60);
+/** Measures wall-clock time between pipeline phases (lap = ms since previous lap). */
+export function createPhaseTimer() {
+  let last = Date.now();
+  return {
+    lap(): number {
+      const now = Date.now();
+      const elapsed = now - last;
+      last = now;
+      return elapsed;
+    },
+  };
 }
 
 export function createImpressionId(): string {

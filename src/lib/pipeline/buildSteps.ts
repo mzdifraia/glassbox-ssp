@@ -1,5 +1,4 @@
 import type { IntegrationStatus, PipelineStep } from "@/lib/types";
-import { mockLatency } from "@/lib/utils/latency";
 import { PIPELINE_STEP_IDS, PIPELINE_STEP_NAMES } from "./constants";
 
 export function makeStep(
@@ -7,9 +6,10 @@ export function makeStep(
   name: string,
   status: PipelineStep["status"],
   confidence: number,
-  reason: string
+  reason: string,
+  latencyMs: number
 ): PipelineStep {
-  return { id, name, status, confidence, reason, latencyMs: mockLatency() };
+  return { id, name, status, confidence, reason, latencyMs };
 }
 
 export function appendSkippedSteps(
@@ -25,7 +25,8 @@ export function appendSkippedSteps(
         PIPELINE_STEP_NAMES[i],
         isTail ? "passed" : "skipped",
         isTail ? 1 : 0,
-        isTail ? "Completed" : reason
+        isTail ? "Completed" : reason,
+        0
       )
     );
   }

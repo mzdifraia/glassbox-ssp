@@ -12,6 +12,9 @@ export interface ProcessCandidatesResult {
   winner: AdCandidate | null;
   blockedCount: number;
   claimChecks: Map<string, ClaimCheckResult>;
+  claimGroundingMs: number;
+  candidateSafetyMs: number;
+  scoringMs: number;
 }
 
 export async function processCandidates(
@@ -23,39 +26,57 @@ export async function processCandidates(
 ): Promise<ProcessCandidatesResult> {
   const claimChecks = new Map<string, ClaimCheckResult>();
 
-  const evaluated = await Promise.all(
+  const claimStart = Date.now();
+  const withClaims = await Promise.all(
     candidates.map(async (candidate) => {
       const claimCheck = await groundClaimsWithTavily(candidate);
       claimChecks.set(candidate.id, claimCheck);
-
-      const safety = checkCandidateSafety(candidate, claimCheck, {
-        intent: context.intent,
-        promptCategory: context.promptCategory,
-      });
-
-      if (!safety.safe) {
-        return {
-          ...candidate,
-          status: "blocked" as const,
-          reason:
-            safety.reason === "unsupported_claim"
-              ? "Unsupported performance claim"
-              : safety.detail,
-        };
-      }
-
-      return { ...candidate, status: "eligible" as const, reason: "" };
+      return { candidate, claimCheck };
     })
   );
+  const claimGroundingMs = Date.now() - claimStart;
+
+  const safetyStart = Date.now();
+  const evaluated = withClaims.map(({ candidate, claimCheck }) => {
+    const safety = checkCandidateSafety(candidate, claimCheck, {
+      intent: context.intent,
+      promptCategory: context.promptCategory,
+    });
+
+    if (!safety.safe) {
+      return {
+        ...candidate,
+        status: "blocked" as const,
+        reason:
+          safety.reason === "unsupported_claim"
+            ? "Unsupported performance claim"
+            : safety.detail,
+      };
+    }
+
+    return { ...candidate, status: "eligible" as const, reason: "" };
+  });
+  const candidateSafetyMs = Date.now() - safetyStart;
 
   const blockedCount = evaluated.filter((c) => c.status === "blocked").length;
+
+  const scoreStart = Date.now();
   const { scored: rawScored, winner } = scoreSurvivors(evaluated);
+  const scoringMs = Date.now() - scoreStart;
 
   const scored = winner
     ? rawScored.map((c) => enrichBlockedBidReason(c, winner))
     : rawScored;
 
-  return { scored, winner, blockedCount, claimChecks };
+  return {
+    scored,
+    winner,
+    blockedCount,
+    claimChecks,
+    claimGroundingMs,
+    candidateSafetyMs,
+    scoringMs,
+  };
 }
 
 function enrichBlockedBidReason(

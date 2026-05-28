@@ -1,5 +1,16 @@
 import type { TraceRow } from "@/lib/types";
 
+export interface TraceTimings {
+  promptSafetyMs: number;
+  intentMs: number;
+  candidatesMs?: number;
+  claimGroundingMs?: number;
+  candidateSafetyMs?: number;
+  scoringMs?: number;
+  receiptMs?: number;
+  attributionMs?: number;
+}
+
 interface TraceContext {
   prompt: string;
   intent: string;
@@ -11,7 +22,10 @@ interface TraceContext {
   apiFailure: boolean;
 }
 
-export function buildTrace(ctx: TraceContext): TraceRow[] {
+export function buildTrace(
+  ctx: TraceContext,
+  timings: TraceTimings
+): TraceRow[] {
   const rows: TraceRow[] = [
     {
       step: "check_prompt_safety()",
@@ -21,7 +35,7 @@ export function buildTrace(ctx: TraceContext): TraceRow[] {
         : "vulnerability — auction suppressed",
       policyId: ctx.monetisable ? undefined : "PROMPT_VULNERABILITY_SUPPRESS",
       confidence: ctx.monetisable ? 0.91 : 0.96,
-      latencyMs: 52,
+      latencyMs: timings.promptSafetyMs,
       status: ctx.monetisable ? "pass" : "blocked",
     },
     {
@@ -29,7 +43,7 @@ export function buildTrace(ctx: TraceContext): TraceRow[] {
       inputSummary: `prompt length=${ctx.prompt.length}`,
       outputSummary: `intent=${ctx.intent}`,
       confidence: 0.93,
-      latencyMs: 38,
+      latencyMs: timings.intentMs,
       status: "pass",
     },
   ];
@@ -49,7 +63,7 @@ export function buildTrace(ctx: TraceContext): TraceRow[] {
       inputSummary: "suppression path",
       outputSummary: "Placement decision: Suppressed",
       confidence: 1,
-      latencyMs: 28,
+      latencyMs: timings.receiptMs ?? 0,
       status: "pass",
     });
     rows.push({
@@ -57,7 +71,7 @@ export function buildTrace(ctx: TraceContext): TraceRow[] {
       inputSummary: "suppression event",
       outputSummary: "suppression_logged",
       confidence: 1,
-      latencyMs: 12,
+      latencyMs: timings.attributionMs ?? 0,
       status: "pass",
     });
     return rows;
@@ -69,7 +83,7 @@ export function buildTrace(ctx: TraceContext): TraceRow[] {
       inputSummary: `intent=${ctx.intent}`,
       outputSummary: "Thrad API failure — no candidates",
       confidence: 0,
-      latencyMs: 420,
+      latencyMs: timings.candidatesMs ?? 0,
       status: "error",
     });
     return rows;
@@ -81,7 +95,15 @@ export function buildTrace(ctx: TraceContext): TraceRow[] {
       inputSummary: `intent=${ctx.intent}`,
       outputSummary: `${ctx.candidateCount} candidates retrieved`,
       confidence: 0.88,
-      latencyMs: 145,
+      latencyMs: timings.candidatesMs ?? 0,
+      status: "pass",
+    },
+    {
+      step: "ground_claims()",
+      inputSummary: "Tavily/stub claim checks",
+      outputSummary: "Claims grounded for all candidates",
+      confidence: 0.87,
+      latencyMs: timings.claimGroundingMs ?? 0,
       status: "pass",
     },
     {
@@ -89,15 +111,7 @@ export function buildTrace(ctx: TraceContext): TraceRow[] {
       inputSummary: `${ctx.candidateCount} candidates`,
       outputSummary: `${ctx.blockedCount} blocked, ${ctx.candidateCount - ctx.blockedCount} survivors`,
       confidence: 0.9,
-      latencyMs: 98,
-      status: ctx.blockedCount > 0 ? "pass" : "pass",
-    },
-    {
-      step: "ground_claims()",
-      inputSummary: "Tavily/stub claim checks",
-      outputSummary: "Claims grounded for all candidates",
-      confidence: 0.87,
-      latencyMs: 210,
+      latencyMs: timings.candidateSafetyMs ?? 0,
       status: "pass",
     },
     {
@@ -107,7 +121,7 @@ export function buildTrace(ctx: TraceContext): TraceRow[] {
         ? `winner=${ctx.winnerId}`
         : "no winner — NO_SAFE_ADS",
       confidence: ctx.winnerId ? 0.92 : 0.5,
-      latencyMs: 34,
+      latencyMs: timings.scoringMs ?? 0,
       status: ctx.winnerId ? "pass" : "blocked",
     },
     {
@@ -115,7 +129,7 @@ export function buildTrace(ctx: TraceContext): TraceRow[] {
       inputSummary: "placement outcome",
       outputSummary: ctx.winnerId ? "Placement decision: Served" : "Suppressed",
       confidence: 0.95,
-      latencyMs: 22,
+      latencyMs: timings.receiptMs ?? 0,
       status: "pass",
     },
     {
@@ -123,7 +137,7 @@ export function buildTrace(ctx: TraceContext): TraceRow[] {
       inputSummary: "impression_created",
       outputSummary: "Attribution event recorded",
       confidence: 1,
-      latencyMs: 8,
+      latencyMs: timings.attributionMs ?? 0,
       status: "pass",
     }
   );

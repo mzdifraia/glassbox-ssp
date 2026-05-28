@@ -1,3 +1,4 @@
+import { supplyInventoryLabel } from "@/lib/ads/supplyMode";
 import type { IntegrationStatus } from "@/lib/types";
 
 export type { IntegrationStatus };
@@ -13,6 +14,7 @@ export function getIntegrationStatus(): IntegrationStatus {
     tavily: hasTavily ? "live" : "stub",
     claimGrounding: hasTavily ? "hybrid" : "stub",
     supply: process.env.DETERMINISTIC_DEMO === "1" ? "fixed" : "live-auction",
+    inventory: supplyInventoryLabel(),
     overmind: "export-ready",
     cursor: "built-with",
   };

@@ -1,6 +1,9 @@
+import { supplyInventoryLabel } from "./supplyMode";
 import { StubAdProvider } from "./StubAdProvider";
 import { ThradProvider } from "./ThradProvider";
 import type { AdProvider } from "./AdProvider";
+
+export { supplyInventoryLabel, useRandomSupply } from "./supplyMode";
 
 /**
  * Hackathon demo uses stub supply only. Thrad is wired for go-to-market after

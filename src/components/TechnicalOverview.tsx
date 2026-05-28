@@ -103,7 +103,8 @@ export function TechnicalOverview({
               <h3 className="text-[10px] uppercase text-zinc-500">Integrations</h3>
               {status ? (
                 <dl className="mt-2 space-y-1 text-zinc-400">
-                  <Row k="Supply" v={`${status.supply} (stub inventory)`} />
+                  <Row k="Auction" v={status.supply} />
+                  <Row k="Inventory" v={status.inventory} />
                   <Row k="Tavily" v={status.tavily} />
                   <Row k="Claim checks" v={status.claimGrounding} />
                   <Row k="Thrad" v={status.thrad} />

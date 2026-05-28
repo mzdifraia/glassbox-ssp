@@ -70,6 +70,8 @@ export interface IntegrationStatus {
   tavily: "live" | "stub";
   claimGrounding: "hybrid" | "stub" | "tavily";
   supply: "live-auction" | "seeded" | "fixed";
+  /** Stub catalog vs per-request synthesis (Vercel default: random). */
+  inventory: "random" | "catalog";
   overmind: "export-ready";
   cursor: "built-with";
 }
@@ -144,7 +146,7 @@ export interface AssistantMessage {
 }
 
 export interface RunMeta {
-  supplyProvider: "stub" | "thrad";
+  supplyProvider: "stub" | "stub-random" | "thrad";
   auctionMode: IntegrationStatus["supply"];
   auctionSeed: string | null;
 }

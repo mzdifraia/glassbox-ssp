@@ -37,7 +37,8 @@ Policy is code, not a score penalty. A higher bid cannot override a block.
 |------------|--------|
 | Prompt gates | Vulnerability / distress suppresses before any ad request |
 | Candidate gates | Unsupported claims, category mismatch, manipulative copy |
-| Auction | Stub supply in demo; live bid/relevance jitter unless `?frozen=1` |
+| Auction | Bid/relevance jitter unless `?frozen=1` |
+| Inventory | **Random synthesis on Vercel** (default); fixed catalog locally or `RANDOM_SUPPLY=0` |
 | Receipt | Why served, why blocked, data used / stored / not stored |
 | Trace | Overmind-ready JSON export per run |
 
@@ -161,6 +162,18 @@ Open [http://localhost:3000](http://localhost:3000) — same UI as [production](
 | `SIMULATE_THRAD_FAILURE` | `?debug=1` UI toggle | Forces ad-provider failure path |
 
 Thrad adapter lives in `src/lib/ads/ThradProvider.ts` behind `AdProvider` — policy, receipts, and attribution stay the same when you flip supply at launch.
+
+### Random ads on Vercel
+
+Vercel does not generate ads itself — your **serverless API routes** do. On deploy (`VERCEL=1`), each commercial run calls `generateRandomCandidates()` in `src/lib/ads/generateRandomCandidates.ts`: new advertiser names, bids, and claims every request, plus one trap ad with a hard-blocked claim (policy still blocks it even on a high bid).
+
+| Env | Inventory |
+|-----|-----------|
+| *(default on Vercel)* | Random synthesis |
+| `RANDOM_SUPPLY=0` | Fixed catalog from `stubCandidates.ts` |
+| `RANDOM_SUPPLY=1` | Force random locally too |
+
+Check [health](https://glassbox-ssp.vercel.app/api/health) → `"inventory": "random"`.
 
 ---
 

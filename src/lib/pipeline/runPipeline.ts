@@ -15,7 +15,7 @@ import type {
   SponsoredContent,
 } from "@/lib/types";
 import { buildRunMeta } from "@/lib/run/buildRunMeta";
-import { getSupplyProviderLabel } from "@/lib/ads/provider";
+import { getSupplyProviderLabel, supplyInventoryLabel } from "@/lib/ads/provider";
 import {
   applySupplyVariance,
   createRunVariance,
@@ -215,7 +215,7 @@ export async function runPipeline(
           PIPELINE_STEP_NAMES[2],
           "passed",
           0.88,
-          `Retrieved ${candidates.length} candidates (${getSupplyProviderLabel()} supply)`,
+          `Retrieved ${candidates.length} candidates (${supplyInventoryLabel()} ${getSupplyProviderLabel()} inventory)`,
           candidatesMs
         ),
         onProgress
